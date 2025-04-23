@@ -809,14 +809,16 @@ export function AuditFormSection({ section, currentSection, form }: AuditFormSec
     case 0:
       return renderAvantPropos();
     case 1:
-      return renderGeneralInformation();
+      return renderMissionFramework();
     case 2:
-      return renderFinancialAnalysis();
+      return renderGeneralInformation();
     case 3:
-      return renderRiskAssessment();
+      return renderFinancialAnalysis();
     case 4:
-      return renderComplianceGovernance();
+      return renderRiskAssessment();
     case 5:
+      return renderComplianceGovernance();
+    case 6:
       return renderRecommendations();
     default:
       return null;
