@@ -29,6 +29,16 @@ const avantProposCompleted: ValidatorFn = (data) => {
   );
 };
 
+// Mission framework section validation
+const missionFrameworkCompleted: ValidatorFn = (data) => {
+  // La section est complétée si au moins le cadre légal, le type d'audit et l'objectif sont remplis
+  return Boolean(
+    data.legalFrameworkText &&
+    data.auditType &&
+    data.missionObjective
+  );
+};
+
 // General information section validation
 const generalInfoCompleted: ValidatorFn = (data) => {
   return Boolean(
@@ -95,30 +105,36 @@ export const formSections: FormSection[] = [
   },
   {
     id: 1,
+    name: "Cadre de la mission",
+    description: "Contexte légal et réglementaire, objectifs et limites",
+    isCompleted: missionFrameworkCompleted
+  },
+  {
+    id: 2,
     name: "Informations générales",
     description: "Informations de base sur l'entité auditée",
     isCompleted: generalInfoCompleted
   },
   {
-    id: 2,
+    id: 3,
     name: "Analyse financière",
     description: "Analyse des données financières et des ratios",
     isCompleted: financialAnalysisCompleted
   },
   {
-    id: 3,
+    id: 4,
     name: "Évaluation des risques",
     description: "Identification et évaluation des risques",
     isCompleted: riskAssessmentCompleted
   },
   {
-    id: 4,
+    id: 5,
     name: "Conformité et gouvernance",
     description: "Évaluation de la conformité réglementaire et de la structure de gouvernance",
     isCompleted: complianceCompleted
   },
   {
-    id: 5,
+    id: 6,
     name: "Recommandations",
     description: "Plan d'action et recommandations",
     isCompleted: recommendationsCompleted

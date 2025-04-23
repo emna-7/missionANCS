@@ -95,6 +95,15 @@ export const missions = pgTable("missions", {
   auditorContacts: jsonb("auditor_contacts"),
   auditedOrgContacts: jsonb("audited_org_contacts"),
   
+  // Cadre de la mission - Informations légales et réglementaires
+  legalFrameworkText: text("legal_framework_text"),
+  legalFrameworkReference: text("legal_framework_reference"),
+  auditType: text("audit_type"),
+  missionObjective: text("mission_objective"),
+  isoPrepCertification: boolean("iso_prep_certification"),
+  isoStandards: jsonb("iso_standards"),
+  auditLimitations: text("audit_limitations"),
+  
   // Financial analysis data
   annualRevenue: decimal("annual_revenue", { precision: 15, scale: 2 }),
   profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
@@ -186,6 +195,19 @@ export const missionFormSchema = insertMissionSchema.extend({
       email: z.string().email("Email invalide").optional().or(z.literal("")),
     })
   ).optional().default([]),
+  
+  // Cadre de la mission
+  legalFrameworkText: z.string().optional(),
+  legalFrameworkReference: z.string().optional(),
+  auditType: z.string().optional(),
+  missionObjective: z.string().optional(),
+  isoPrepCertification: z.boolean().optional().default(false),
+  isoStandards: z.object({
+    name: z.string().optional(),
+    securityStandards: z.boolean().optional().default(false),
+    specificStandards: z.boolean().optional().default(false),
+  }).optional(),
+  auditLimitations: z.string().optional(),
 
   // Original fields
   contacts: z.array(

@@ -19,6 +19,7 @@ import { ContactsField } from "./ContactsField";
 import { RisksField } from "./RisksField";
 import { RecommendationsField } from "./RecommendationsField";
 import { AvantProposSection } from "./AvantProposSection";
+import { MissionFrameworkSection } from "./MissionFrameworkSection";
 
 interface AuditFormSectionProps {
   section: FormSection;
@@ -33,8 +34,13 @@ export function AuditFormSection({ section, currentSection, form }: AuditFormSec
   const renderAvantPropos = () => (
     <AvantProposSection form={form} />
   );
+  
+  // Section 1: Cadre de la mission
+  const renderMissionFramework = () => (
+    <MissionFrameworkSection form={form} />
+  );
 
-  // Section 1: General Information
+  // Section 2: General Information
   const renderGeneralInformation = () => (
     <div>
       <div className="flex justify-between items-center mb-6">
