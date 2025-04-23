@@ -411,8 +411,8 @@ export const missionFormSchema = insertMissionSchema.extend({
   securityDomains: z.array(
     z.object({
       id: z.number(),
-      domain: z.string(),
-      reference: z.string(),
+      domainName: z.string(),
+      referential: z.string(),
       actions: z.string()
     })
   ).optional().default([]),
@@ -421,8 +421,8 @@ export const missionFormSchema = insertMissionSchema.extend({
   securityMeasuresMaturity: z.array(
     z.object({
       id: z.number(),
-      domain: z.string(),
-      maturity: z.string(),
+      domainName: z.string(),
+      maturityLevel: z.string(),
       comments: z.string()
     })
   ).optional().default([]),
@@ -431,10 +431,10 @@ export const missionFormSchema = insertMissionSchema.extend({
   auditTools: z.array(
     z.object({
       id: z.number(),
-      name: z.string(),
+      toolName: z.string(),
       version: z.string(),
       purpose: z.string(),
-      responsiblePerson: z.string(),
+      mainResponsible: z.string(),
       usageComments: z.string()
     })
   ).optional().default([]),
@@ -443,11 +443,11 @@ export const missionFormSchema = insertMissionSchema.extend({
   auditChecklists: z.array(
     z.object({
       id: z.number(),
-      name: z.string(),
+      checklistName: z.string(),
       version: z.string(),
       source: z.string(),
       description: z.string(),
-      lastUpdated: z.string()
+      lastUpdate: z.string()
     })
   ).optional().default([]),
   
@@ -459,7 +459,7 @@ export const missionFormSchema = insertMissionSchema.extend({
       role: z.string(),
       qualification: z.string(),
       certifiedBy: z.string(),
-      remarks: z.string()
+      observationsPro: z.string()
     })
   ).optional().default([]),
   
@@ -478,13 +478,13 @@ export const missionFormSchema = insertMissionSchema.extend({
     z.object({
       id: z.number(),
       phase: z.string(),
-      task: z.string(),
+      taskDescription: z.string(),
       startDate: z.string(),
       endDate: z.string(),
-      duration: z.number(),
+      period: z.number(),
       status: z.string(),
-      requiredResources: z.number(),
-      intervenants: z.number()
+      manDays: z.number(),
+      peopleInvolved: z.number()
     })
   ).optional().default([]),
 

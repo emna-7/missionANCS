@@ -51,8 +51,8 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
       ...securityDomains,
       {
         id: newId,
-        domain: "",
-        reference: "",
+        domainName: "",
+        referential: "",
         actions: ""
       }
     ]);
@@ -76,8 +76,8 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
       ...securityMeasuresMaturity,
       {
         id: newId,
-        domain: "",
-        maturity: "",
+        domainName: "",
+        maturityLevel: "",
         comments: ""
       }
     ]);
@@ -101,10 +101,10 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
       ...auditTools,
       {
         id: newId,
-        name: "",
+        toolName: "",
         version: "",
         purpose: "",
-        responsiblePerson: "",
+        mainResponsible: "",
         usageComments: ""
       }
     ]);
@@ -128,11 +128,11 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
       ...auditChecklists,
       {
         id: newId,
-        name: "",
+        checklistName: "",
         version: "",
         source: "",
         description: "",
-        lastUpdated: ""
+        lastUpdate: ""
       }
     ]);
   };
@@ -159,7 +159,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         role: "",
         qualification: "",
         certifiedBy: "",
-        remarks: ""
+        observationsPro: ""
       }
     ]);
   };
@@ -208,13 +208,13 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
       {
         id: newId,
         phase: "",
-        task: "",
+        taskDescription: "",
         startDate: "",
         endDate: "",
-        duration: 1,
+        period: 1,
         status: "not_started",
-        requiredResources: 1,
-        intervenants: 1
+        manDays: 1,
+        peopleInvolved: 1
       }
     ]);
   };
@@ -276,7 +276,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`securityDomains.${index}.domain`}
+                          name={`securityDomains.${index}.domainName`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <Select 
@@ -301,7 +301,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`securityDomains.${index}.reference`}
+                          name={`securityDomains.${index}.referential`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
@@ -372,7 +372,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`securityMeasuresMaturity.${index}.domain`}
+                          name={`securityMeasuresMaturity.${index}.domainName`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <Select 
@@ -397,7 +397,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`securityMeasuresMaturity.${index}.maturity`}
+                          name={`securityMeasuresMaturity.${index}.maturityLevel`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <Select 
@@ -482,7 +482,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditTools.${index}.name`}
+                          name={`auditTools.${index}.toolName`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
@@ -521,7 +521,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditTools.${index}.responsiblePerson`}
+                          name={`auditTools.${index}.mainResponsible`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
