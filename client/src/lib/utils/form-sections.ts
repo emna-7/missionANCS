@@ -77,6 +77,34 @@ const auditScopeCompleted: ValidatorFn = (data) => {
   );
 };
 
+// Méthodologie d'audit validation
+const auditMethodologyCompleted: ValidatorFn = (data) => {
+  // La section est complétée si au moins les domaines de sécurité, la maturité et les outils sont remplis
+  return Boolean(
+    // Vérifier les domaines de sécurité
+    data.securityDomains && 
+    data.securityDomains.length > 0 &&
+    // Vérifier la maturité des mesures
+    data.securityMeasuresMaturity && 
+    data.securityMeasuresMaturity.length > 0 &&
+    // Vérifier les outils d'audit
+    data.auditTools && 
+    data.auditTools.length > 0 &&
+    // Vérifier les checklists
+    data.auditChecklists && 
+    data.auditChecklists.length > 0 &&
+    // Vérifier l'équipe d'audit
+    data.auditTeam && 
+    data.auditTeam.length > 0 &&
+    // Vérifier l'équipe côté organisme
+    data.organizationTeam && 
+    data.organizationTeam.length > 0 &&
+    // Vérifier le planning d'exécution
+    data.missionPlanning && 
+    data.missionPlanning.length > 0
+  );
+};
+
 // General information section validation
 const generalInfoCompleted: ValidatorFn = (data) => {
   return Boolean(
@@ -161,30 +189,36 @@ export const formSections: FormSection[] = [
   },
   {
     id: 4,
+    name: "Méthodologie d'audit",
+    description: "Référentiels, outils, équipes et planning d'exécution",
+    isCompleted: auditMethodologyCompleted
+  },
+  {
+    id: 5,
     name: "Informations générales",
     description: "Informations de base sur l'entité auditée",
     isCompleted: generalInfoCompleted
   },
   {
-    id: 5,
+    id: 6,
     name: "Analyse financière",
     description: "Analyse des données financières et des ratios",
     isCompleted: financialAnalysisCompleted
   },
   {
-    id: 6,
+    id: 7,
     name: "Évaluation des risques",
     description: "Identification et évaluation des risques",
     isCompleted: riskAssessmentCompleted
   },
   {
-    id: 7,
+    id: 8,
     name: "Conformité et gouvernance",
     description: "Évaluation de la conformité réglementaire et de la structure de gouvernance",
     isCompleted: complianceCompleted
   },
   {
-    id: 8,
+    id: 9,
     name: "Recommandations",
     description: "Plan d'action et recommandations",
     isCompleted: recommendationsCompleted
@@ -286,4 +320,50 @@ export const committeeOptions = [
   "Comité des nominations",
   "Comité stratégique",
   "Comité éthique"
+];
+
+// Security domains options
+export const securityDomainOptions = [
+  "Mesures organisationnelles",
+  "Mesures liées aux personnes",
+  "Mesures d'ordre physique",
+  "Mesures technologiques"
+];
+
+// Security measures maturity options
+export const maturityOptions = [
+  { value: "none", label: "Inexistant" },
+  { value: "basic", label: "Basic" },
+  { value: "average", label: "Moyen" },
+  { value: "good", label: "Bon" },
+  { value: "excellent", label: "Excellent" }
+];
+
+// Audit tool types
+export const auditToolTypes = [
+  { value: "vuln_scan", label: "Scanner de vulnérabilités" },
+  { value: "net_sniffer", label: "Analyseur réseau" },
+  { value: "pentest", label: "Outil de pentest" },
+  { value: "compliance", label: "Verification compliance" },
+  { value: "other", label: "Autre" }
+];
+
+// Audit phases
+export const auditPhases = [
+  { value: "planning", label: "Phase 0: Planification de l'audit" },
+  { value: "preparation", label: "Phase 1: Déclenchement de l'Audit" },
+  { value: "organizational", label: "Phase 1: Audit Organisationnel et Physique" },
+  { value: "identification", label: "Phase 2: Représentation des Risques" },
+  { value: "technical", label: "Phase 3: Audit Technique" },
+  { value: "post_audit", label: "Phase 4: Restitution Post-Audit" },
+  { value: "report", label: "Phase 5: Préparation du Rapport d'Audit" }
+];
+
+// Task status options
+export const taskStatusOptions = [
+  { value: "not_started", label: "Non commencé" },
+  { value: "in_progress", label: "En cours" },
+  { value: "delayed", label: "Retardé" },
+  { value: "completed", label: "Terminé" },
+  { value: "canceled", label: "Annulé" }
 ];

@@ -143,6 +143,27 @@ export const missions = pgTable("missions", {
   // Champ d'audit - Serveurs
   servers: jsonb("servers"),
   
+  // Méthodologie d'audit - Domaines de sécurité
+  securityDomains: jsonb("security_domains"),
+  
+  // Méthodologie d'audit - Maturité des mesures
+  securityMeasuresMaturity: jsonb("security_measures_maturity"),
+  
+  // Méthodologie d'audit - Outils d'audit
+  auditTools: jsonb("audit_tools"),
+  
+  // Méthodologie d'audit - Checklists
+  auditChecklists: jsonb("audit_checklists"),
+  
+  // Méthodologie d'audit - Équipe d'audit
+  auditTeam: jsonb("audit_team"),
+  
+  // Méthodologie d'audit - Équipe côté organisme
+  organizationTeam: jsonb("organization_team"),
+  
+  // Méthodologie d'audit - Planning d'exécution
+  missionPlanning: jsonb("mission_planning"),
+  
   // Financial analysis data
   annualRevenue: decimal("annual_revenue", { precision: 15, scale: 2 }),
   profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
@@ -383,6 +404,87 @@ export const missionFormSchema = insertMissionSchema.extend({
       role: z.string(),
       inAuditPerimeter: z.boolean(),
       exclusionJustification: z.string().optional()
+    })
+  ).optional().default([]),
+  
+  // Méthodologie d'audit - Domaines de sécurité
+  securityDomains: z.array(
+    z.object({
+      id: z.number(),
+      domain: z.string(),
+      reference: z.string(),
+      actions: z.string()
+    })
+  ).optional().default([]),
+  
+  // Méthodologie d'audit - Maturité des mesures
+  securityMeasuresMaturity: z.array(
+    z.object({
+      id: z.number(),
+      domain: z.string(),
+      maturity: z.string(),
+      comments: z.string()
+    })
+  ).optional().default([]),
+  
+  // Méthodologie d'audit - Outils d'audit
+  auditTools: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      version: z.string(),
+      purpose: z.string(),
+      responsiblePerson: z.string(),
+      usageComments: z.string()
+    })
+  ).optional().default([]),
+  
+  // Méthodologie d'audit - Checklists
+  auditChecklists: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      version: z.string(),
+      source: z.string(),
+      description: z.string(),
+      lastUpdated: z.string()
+    })
+  ).optional().default([]),
+  
+  // Méthodologie d'audit - Équipe d'audit
+  auditTeam: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      role: z.string(),
+      qualification: z.string(),
+      certifiedBy: z.string(),
+      remarks: z.string()
+    })
+  ).optional().default([]),
+  
+  // Méthodologie d'audit - Équipe côté organisme
+  organizationTeam: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      position: z.string(),
+      function: z.string()
+    })
+  ).optional().default([]),
+  
+  // Méthodologie d'audit - Planning d'exécution
+  missionPlanning: z.array(
+    z.object({
+      id: z.number(),
+      phase: z.string(),
+      task: z.string(),
+      startDate: z.string(),
+      endDate: z.string(),
+      duration: z.number(),
+      status: z.string(),
+      requiredResources: z.number(),
+      intervenants: z.number()
     })
   ).optional().default([]),
 

@@ -22,6 +22,7 @@ import { AvantProposSection } from "./AvantProposSection";
 import { MissionFrameworkSection } from "./MissionFrameworkSection";
 import { OrganizationPresentationSection } from "./OrganizationPresentationSection";
 import { AuditScopeSection } from "./AuditScopeSection";
+import { AuditMethodologySection } from "./AuditMethodologySection";
 
 interface AuditFormSectionProps {
   section: FormSection;
@@ -51,8 +52,13 @@ export function AuditFormSection({ section, currentSection, form }: AuditFormSec
   const renderAuditScope = () => (
     <AuditScopeSection form={form} />
   );
+  
+  // Section 4: Audit Methodology
+  const renderAuditMethodology = () => (
+    <AuditMethodologySection form={form} />
+  );
 
-  // Section 4: General Information
+  // Section 5: General Information
   const renderGeneralInformation = () => (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -827,14 +833,16 @@ export function AuditFormSection({ section, currentSection, form }: AuditFormSec
     case 3:
       return renderAuditScope();
     case 4:
-      return renderGeneralInformation();
+      return renderAuditMethodology();
     case 5:
-      return renderFinancialAnalysis();
+      return renderGeneralInformation();
     case 6:
-      return renderRiskAssessment();
+      return renderFinancialAnalysis();
     case 7:
-      return renderComplianceGovernance();
+      return renderRiskAssessment();
     case 8:
+      return renderComplianceGovernance();
+    case 9:
       return renderRecommendations();
     default:
       return null;
