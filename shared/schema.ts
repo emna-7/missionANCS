@@ -104,6 +104,23 @@ export const missions = pgTable("missions", {
   isoStandards: jsonb("iso_standards"),
   auditLimitations: text("audit_limitations"),
   
+  // Présentation de l'organisme audité - Informations générales
+  orgName: text("org_name"),
+  orgLogo: text("org_logo"),
+  orgBusinessActivity: text("org_business_activity"),
+  orgCreationDate: text("org_creation_date"),
+  orgContactInfo: text("org_contact_info"),
+  orgWebsite: text("org_website"),
+  
+  // Présentation de l'organisme audité - Cartographie des processus
+  businessProcesses: jsonb("business_processes"),
+  
+  // Présentation de l'organisme audité - Exigences de sécurité
+  securityRequirements: jsonb("security_requirements"),
+  
+  // Présentation de l'organisme audité - CIA (Confidentialité, Intégrité, Disponibilité)
+  ciaMatrix: jsonb("cia_matrix"),
+  
   // Financial analysis data
   annualRevenue: decimal("annual_revenue", { precision: 15, scale: 2 }),
   profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
@@ -208,6 +225,73 @@ export const missionFormSchema = insertMissionSchema.extend({
     specificStandards: z.boolean().optional().default(false),
   }).optional(),
   auditLimitations: z.string().optional(),
+  
+  // Présentation de l'organisme audité
+  orgName: z.string().optional(),
+  orgLogo: z.string().optional(),
+  orgBusinessActivity: z.string().optional(),
+  orgCreationDate: z.string().optional(),
+  orgContactInfo: z.string().optional(),
+  orgWebsite: z.string().optional(),
+  
+  // Cartographie des processus
+  businessProcesses: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      description: z.string().optional(),
+      dataType: z.string().optional(),
+    })
+  ).optional().default([]),
+  
+  // Exigences de sécurité
+  securityRequirements: z.array(
+    z.object({
+      processId: z.number(),
+      processName: z.string(),
+      confidentiality: z.number().min(1).max(3),
+      integrity: z.number().min(1).max(3),
+      availability: z.number().min(1).max(3),
+      comments: z.string().optional(),
+    })
+  ).optional().default([]),
+  
+  // CIA Matrix
+  ciaMatrix: z.object({
+    confidentiality: z.array(
+      z.object({
+        level: z.number(),
+        name: z.string(),
+        description: z.string(),
+      })
+    ).optional().default([
+      { level: 1, name: "Faible", description: "Information publique, diffusion sans restriction." },
+      { level: 2, name: "Moyen", description: "Restreint au personnel interne et partenaires autorisés." },
+      { level: 3, name: "Élevé", description: "Très restreint, accès limité aux personnes expressément autorisées." }
+    ]),
+    integrity: z.array(
+      z.object({
+        level: z.number(),
+        name: z.string(),
+        description: z.string(),
+      })
+    ).optional().default([
+      { level: 1, name: "Faible", description: "Modifications mineures acceptables, impact limité." },
+      { level: 2, name: "Moyen", description: "Les erreurs tolérables si détectées, données vérifiées par processus." },
+      { level: 3, name: "Élevé", description: "Aucune erreur tolérée, vérification avancée requise." }
+    ]),
+    availability: z.array(
+      z.object({
+        level: z.number(),
+        name: z.string(),
+        description: z.string(),
+      })
+    ).optional().default([
+      { level: 1, name: "Faible", description: "Indisponibilité tolérable, peu d'impact opérationnel." },
+      { level: 2, name: "Moyen", description: "Disponible aux heures ouvrées avec interruptions planifiées." },
+      { level: 3, name: "Élevé", description: "Haute disponibilité requise 24/7, temps d'arrêt minimal." }
+    ])
+  }).optional().default({}),
 
   // Original fields
   contacts: z.array(

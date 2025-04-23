@@ -39,6 +39,20 @@ const missionFrameworkCompleted: ValidatorFn = (data) => {
   );
 };
 
+// Organization presentation section validation
+const orgPresentationCompleted: ValidatorFn = (data) => {
+  // La section est complétée si les informations de base et au moins un processus sont remplis
+  return Boolean(
+    data.orgName &&
+    data.orgBusinessActivity &&
+    data.businessProcesses &&
+    data.businessProcesses.length > 0 &&
+    // Vérifier qu'au moins une exigence de sécurité est définie
+    data.securityRequirements &&
+    data.securityRequirements.length > 0
+  );
+};
+
 // General information section validation
 const generalInfoCompleted: ValidatorFn = (data) => {
   return Boolean(
@@ -111,30 +125,36 @@ export const formSections: FormSection[] = [
   },
   {
     id: 2,
+    name: "Présentation de l'organisme",
+    description: "Présentation générale et cartographie des processus",
+    isCompleted: orgPresentationCompleted
+  },
+  {
+    id: 3,
     name: "Informations générales",
     description: "Informations de base sur l'entité auditée",
     isCompleted: generalInfoCompleted
   },
   {
-    id: 3,
+    id: 4,
     name: "Analyse financière",
     description: "Analyse des données financières et des ratios",
     isCompleted: financialAnalysisCompleted
   },
   {
-    id: 4,
+    id: 5,
     name: "Évaluation des risques",
     description: "Identification et évaluation des risques",
     isCompleted: riskAssessmentCompleted
   },
   {
-    id: 5,
+    id: 6,
     name: "Conformité et gouvernance",
     description: "Évaluation de la conformité réglementaire et de la structure de gouvernance",
     isCompleted: complianceCompleted
   },
   {
-    id: 6,
+    id: 7,
     name: "Recommandations",
     description: "Plan d'action et recommandations",
     isCompleted: recommendationsCompleted
