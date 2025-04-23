@@ -594,7 +594,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditChecklists.${index}.name`}
+                          name={`auditChecklists.${index}.checklistName`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
@@ -646,7 +646,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditChecklists.${index}.lastUpdated`}
+                          name={`auditChecklists.${index}.lastUpdate`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
@@ -758,7 +758,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditTeam.${index}.remarks`}
+                          name={`auditTeam.${index}.observationsPro`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
@@ -930,7 +930,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`missionPlanning.${index}.task`}
+                          name={`missionPlanning.${index}.taskDescription`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
@@ -969,7 +969,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`missionPlanning.${index}.duration`}
+                          name={`missionPlanning.${index}.period`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
@@ -1007,7 +1007,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`missionPlanning.${index}.requiredResources`}
+                          name={`missionPlanning.${index}.manDays`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
@@ -1020,7 +1020,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`missionPlanning.${index}.intervenants`}
+                          name={`missionPlanning.${index}.peopleInvolved`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
