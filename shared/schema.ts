@@ -85,6 +85,16 @@ export const missions = pgTable("missions", {
   address: text("address"),
   activitySector: text("activity_sector"),
   
+  // Avant propos - Document confidentiality
+  confidentialityOptions: jsonb("confidentiality_options"),
+  
+  // Avant propos - Document version history
+  versionHistory: jsonb("version_history"),
+  
+  // Avant propos - Auditor contacts and Audited organization contacts
+  auditorContacts: jsonb("auditor_contacts"),
+  auditedOrgContacts: jsonb("audited_org_contacts"),
+  
   // Financial analysis data
   annualRevenue: decimal("annual_revenue", { precision: 15, scale: 2 }),
   profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
@@ -135,6 +145,49 @@ export type InsertMission = z.infer<typeof insertMissionSchema>;
 
 // Form data validation schema for frontend (extends the insert schema)
 export const missionFormSchema = insertMissionSchema.extend({
+  // Avant propos - Confidentiality options
+  confidentialityOptions: z.object({
+    noDisclosure: z.boolean().default(false),
+    noReproduction: z.boolean().default(false),
+    noPersonalUse: z.boolean().default(false),
+    noCommercialUse: z.boolean().default(false),
+  }).optional(),
+  
+  // Avant propos - Version history
+  versionHistory: z.array(
+    z.object({
+      version: z.string(),
+      date: z.string(),
+      author: z.string(),
+      changes: z.string(),
+    })
+  ).optional().default([
+    { version: "1.0", date: new Date().toLocaleDateString('fr-FR'), author: "", changes: "Création du rapport" }
+  ]),
+  
+  // Avant propos - Auditor contacts
+  auditorContacts: z.array(
+    z.object({
+      name: z.string(),
+      firstName: z.string(),
+      title: z.string(),
+      phone: z.string(),
+      email: z.string().email("Email invalide").optional().or(z.literal("")),
+    })
+  ).optional().default([]),
+  
+  // Avant propos - Audited organization contacts
+  auditedOrgContacts: z.array(
+    z.object({
+      name: z.string(),
+      firstName: z.string(),
+      title: z.string(),
+      phone: z.string(),
+      email: z.string().email("Email invalide").optional().or(z.literal("")),
+    })
+  ).optional().default([]),
+
+  // Original fields
   contacts: z.array(
     z.object({
       name: z.string().min(1, "Le nom est requis"),

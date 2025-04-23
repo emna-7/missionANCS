@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ContactsField } from "./ContactsField";
 import { RisksField } from "./RisksField";
 import { RecommendationsField } from "./RecommendationsField";
+import { AvantProposSection } from "./AvantProposSection";
 
 interface AuditFormSectionProps {
   section: FormSection;

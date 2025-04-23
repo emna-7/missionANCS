@@ -11,6 +11,24 @@ export interface FormSection {
   isCompleted: ValidatorFn;
 }
 
+// Avant propos section validation
+const avantProposCompleted: ValidatorFn = (data) => {
+  // La section est complétée si au moins une option de confidentialité est sélectionnée,
+  // il y a au moins un élément dans l'historique des versions,
+  // et il y a au moins un contact dans la diffusion côté auditeur
+  return Boolean(
+    data.confidentialityOptions && 
+    (data.confidentialityOptions.noDisclosure || 
+     data.confidentialityOptions.noReproduction || 
+     data.confidentialityOptions.noPersonalUse || 
+     data.confidentialityOptions.noCommercialUse) &&
+    data.versionHistory && 
+    data.versionHistory.length > 0 &&
+    data.auditorContacts && 
+    data.auditorContacts.length > 0
+  );
+};
+
 // General information section validation
 const generalInfoCompleted: ValidatorFn = (data) => {
   return Boolean(
@@ -71,30 +89,36 @@ const recommendationsCompleted: ValidatorFn = (data) => {
 export const formSections: FormSection[] = [
   {
     id: 0,
+    name: "Avant propos",
+    description: "Informations sur la confidentialité et la diffusion du document",
+    isCompleted: avantProposCompleted
+  },
+  {
+    id: 1,
     name: "Informations générales",
     description: "Informations de base sur l'entité auditée",
     isCompleted: generalInfoCompleted
   },
   {
-    id: 1,
+    id: 2,
     name: "Analyse financière",
     description: "Analyse des données financières et des ratios",
     isCompleted: financialAnalysisCompleted
   },
   {
-    id: 2,
+    id: 3,
     name: "Évaluation des risques",
     description: "Identification et évaluation des risques",
     isCompleted: riskAssessmentCompleted
   },
   {
-    id: 3,
+    id: 4,
     name: "Conformité et gouvernance",
     description: "Évaluation de la conformité réglementaire et de la structure de gouvernance",
     isCompleted: complianceCompleted
   },
   {
-    id: 4,
+    id: 5,
     name: "Recommandations",
     description: "Plan d'action et recommandations",
     isCompleted: recommendationsCompleted
