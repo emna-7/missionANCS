@@ -53,6 +53,30 @@ const orgPresentationCompleted: ValidatorFn = (data) => {
   );
 };
 
+// Audit scope section validation
+const auditScopeCompleted: ValidatorFn = (data) => {
+  // La section est complétée si au moins le périmètre géographique et les impacts sont remplis
+  return Boolean(
+    data.geographicPerimeter && 
+    data.geographicPerimeter.length > 0 &&
+    data.operationsImpact &&
+    data.sensitiveData &&
+    data.infrastructureComplexity &&
+    // Vérifier qu'au moins une application est définie
+    data.applications && 
+    data.applications.length > 0 &&
+    // Vérifier qu'au moins un élément d'infrastructure est défini
+    data.networkInfrastructure && 
+    data.networkInfrastructure.length > 0 &&
+    // Vérifier qu'au moins un poste de travail est défini
+    data.workstations && 
+    data.workstations.length > 0 &&
+    // Vérifier qu'au moins un serveur est défini
+    data.servers && 
+    data.servers.length > 0
+  );
+};
+
 // General information section validation
 const generalInfoCompleted: ValidatorFn = (data) => {
   return Boolean(
@@ -131,30 +155,36 @@ export const formSections: FormSection[] = [
   },
   {
     id: 3,
+    name: "Champ d'audit",
+    description: "Périmètre, applications et infrastructure auditée",
+    isCompleted: auditScopeCompleted
+  },
+  {
+    id: 4,
     name: "Informations générales",
     description: "Informations de base sur l'entité auditée",
     isCompleted: generalInfoCompleted
   },
   {
-    id: 4,
+    id: 5,
     name: "Analyse financière",
     description: "Analyse des données financières et des ratios",
     isCompleted: financialAnalysisCompleted
   },
   {
-    id: 5,
+    id: 6,
     name: "Évaluation des risques",
     description: "Identification et évaluation des risques",
     isCompleted: riskAssessmentCompleted
   },
   {
-    id: 6,
+    id: 7,
     name: "Conformité et gouvernance",
     description: "Évaluation de la conformité réglementaire et de la structure de gouvernance",
     isCompleted: complianceCompleted
   },
   {
-    id: 7,
+    id: 8,
     name: "Recommandations",
     description: "Plan d'action et recommandations",
     isCompleted: recommendationsCompleted

@@ -121,6 +121,28 @@ export const missions = pgTable("missions", {
   // Présentation de l'organisme audité - CIA (Confidentialité, Intégrité, Disponibilité)
   ciaMatrix: jsonb("cia_matrix"),
   
+  // Champ d'audit - Périmètre géographique
+  geographicPerimeter: jsonb("geographic_perimeter"),
+  
+  // Champ d'audit - Impacts et complexité
+  operationsImpact: text("operations_impact"),
+  sensitiveData: text("sensitive_data"),
+  infrastructureComplexity: text("infrastructure_complexity"),
+  samplingCriteria: text("sampling_criteria"),
+  systemsDescription: text("systems_description"),
+  
+  // Champ d'audit - Applications
+  applications: jsonb("applications"),
+  
+  // Champ d'audit - Infrastructure réseau et sécurité
+  networkInfrastructure: jsonb("network_infrastructure"),
+  
+  // Champ d'audit - Postes de travail
+  workstations: jsonb("workstations"),
+  
+  // Champ d'audit - Serveurs
+  servers: jsonb("servers"),
+  
   // Financial analysis data
   annualRevenue: decimal("annual_revenue", { precision: 15, scale: 2 }),
   profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
@@ -292,6 +314,77 @@ export const missionFormSchema = insertMissionSchema.extend({
       { level: 3, name: "Élevé", description: "Haute disponibilité requise 24/7, temps d'arrêt minimal." }
     ])
   }).optional().default({}),
+  
+  // Champ d'audit - Périmètre géographique
+  geographicPerimeter: z.array(
+    z.object({
+      id: z.number(),
+      site: z.string(),
+      structure: z.string(),
+      location: z.string()
+    })
+  ).optional().default([]),
+  
+  // Champ d'audit - Impacts et complexité
+  operationsImpact: z.string().optional(),
+  sensitiveData: z.string().optional(),
+  infrastructureComplexity: z.string().optional(),
+  samplingCriteria: z.string().optional(),
+  systemsDescription: z.string().optional(),
+  
+  // Champ d'audit - Applications
+  applications: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      modules: z.string(),
+      description: z.string().optional(),
+      environment: z.string().optional(),
+      developedBy: z.string().optional(),
+      ipAddresses: z.string().optional(),
+      userCount: z.number().optional()
+    })
+  ).optional().default([]),
+  
+  // Champ d'audit - Infrastructure réseau et sécurité
+  networkInfrastructure: z.array(
+    z.object({
+      id: z.number(),
+      type: z.string(),
+      brand: z.string(),
+      model: z.string(),
+      quantity: z.number(),
+      managedBy: z.string(),
+      observations: z.string().optional(),
+      inAuditPerimeter: z.boolean(),
+      exclusionJustification: z.string().optional()
+    })
+  ).optional().default([]),
+  
+  // Champ d'audit - Postes de travail
+  workstations: z.array(
+    z.object({
+      id: z.number(),
+      system: z.string(),
+      count: z.number(),
+      inAuditPerimeter: z.boolean(),
+      exclusionJustification: z.string().optional()
+    })
+  ).optional().default([]),
+  
+  // Champ d'audit - Serveurs
+  servers: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      ipAddress: z.string(),
+      type: z.string(),
+      system: z.string(),
+      role: z.string(),
+      inAuditPerimeter: z.boolean(),
+      exclusionJustification: z.string().optional()
+    })
+  ).optional().default([]),
 
   // Original fields
   contacts: z.array(
