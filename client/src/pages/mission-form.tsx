@@ -46,6 +46,34 @@ export default function MissionForm({ id }: MissionFormProps) {
       activitySector: "",
       status: "draft",
       progress: 0,
+      // Avant propos values
+      confidentialityOptions: {
+        noDisclosure: false,
+        noReproduction: false,
+        noPersonalUse: false,
+        noCommercialUse: false,
+      },
+      versionHistory: [{
+        version: "1.0",
+        date: new Date().toISOString().split('T')[0],
+        author: "Belkhiria Emna",
+        changes: "Création du rapport"
+      }],
+      auditorContacts: [{
+        name: "Dupont",
+        firstName: "Jean",
+        title: "Auditeur",
+        phone: "53970527",
+        email: "jean@example.com"
+      }],
+      auditedOrgContacts: [{
+        name: "Omrani",
+        firstName: "Ahmed",
+        title: "Responsable",
+        phone: "97863452",
+        email: "omrani@audite.com"
+      }],
+      // Original fields
       contacts: [{ name: "", position: "", email: "" }],
       risks: [{ riskType: "", probability: "", impact: "", description: "", mitigation: "" }],
       recommendations: [{ description: "", priority: "medium", responsible: "", deadline: "" }],
@@ -58,8 +86,46 @@ export default function MissionForm({ id }: MissionFormProps) {
     if (missionData) {
       // Reset the form with mission data
       const { contacts, risks, recommendations, ...rest } = missionData;
+      
+      // Préparer des valeurs par défaut pour les nouvelles sections si elles n'existent pas dans les données
+      const defaultConfidentialityOptions = {
+        noDisclosure: false,
+        noReproduction: false,
+        noPersonalUse: false,
+        noCommercialUse: false,
+      };
+      
+      const defaultVersionHistory = [{
+        version: "1.0",
+        date: new Date().toISOString().split('T')[0],
+        author: "Belkhiria Emna",
+        changes: "Création du rapport"
+      }];
+      
+      const defaultAuditorContacts = [{
+        name: "Dupont",
+        firstName: "Jean",
+        title: "Auditeur",
+        phone: "53970527",
+        email: "jean@example.com"
+      }];
+      
+      const defaultAuditedOrgContacts = [{
+        name: "Omrani",
+        firstName: "Ahmed",
+        title: "Responsable",
+        phone: "97863452",
+        email: "omrani@audite.com"
+      }];
+      
       form.reset({
         ...rest,
+        // Données de l'avant propos
+        confidentialityOptions: rest.confidentialityOptions || defaultConfidentialityOptions,
+        versionHistory: rest.versionHistory?.length ? rest.versionHistory : defaultVersionHistory,
+        auditorContacts: rest.auditorContacts?.length ? rest.auditorContacts : defaultAuditorContacts,
+        auditedOrgContacts: rest.auditedOrgContacts?.length ? rest.auditedOrgContacts : defaultAuditedOrgContacts,
+        // Données originales
         contacts: contacts?.length ? contacts : [{ name: "", position: "", email: "" }],
         risks: risks?.length ? risks : [{ riskType: "", probability: "", impact: "", description: "", mitigation: "" }],
         recommendations: recommendations?.length 

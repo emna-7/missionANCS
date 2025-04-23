@@ -1,546 +1,522 @@
-import { useState } from "react";
-import { useFieldArray } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MissionFormData } from "@shared/schema";
-import { Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PlusCircle, Trash2, Copy } from "lucide-react";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { formSections } from "@/lib/utils/form-sections";
 
 interface AvantProposSectionProps {
   form: any;
 }
 
 export function AvantProposSection({ form }: AvantProposSectionProps) {
-  // État pour savoir si la section est complétée
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  // Set up field arrays for version history, auditor contacts, and audited org contacts
-  const versionHistory = useFieldArray({
-    control: form.control,
-    name: "versionHistory",
-  });
+  const isCompleted = formSections[0].isCompleted(form.getValues());
   
-  const auditorContacts = useFieldArray({
-    control: form.control,
-    name: "auditorContacts",
-  });
+  // Version history management
+  const [expandedVersion, setExpandedVersion] = useState<number | null>(null);
   
-  const auditedOrgContacts = useFieldArray({
-    control: form.control,
-    name: "auditedOrgContacts",
-  });
+  const addVersion = () => {
+    const currentVersions = form.getValues("versionHistory") || [];
+    const today = new Date().toISOString().split('T')[0];
+    
+    form.setValue("versionHistory", [
+      ...currentVersions, 
+      { 
+        version: `1.${currentVersions.length}`, 
+        date: today, 
+        author: "",
+        changes: ""
+      }
+    ]);
+  };
+  
+  const removeVersion = (index: number) => {
+    const currentVersions = form.getValues("versionHistory") || [];
+    form.setValue(
+      "versionHistory", 
+      currentVersions.filter((_, i) => i !== index)
+    );
+  };
+  
+  // Contacts management (auditeurs)
+  const addAuditorContact = () => {
+    const currentContacts = form.getValues("auditorContacts") || [];
+    form.setValue("auditorContacts", [
+      ...currentContacts, 
+      { 
+        name: "", 
+        firstName: "", 
+        title: "", 
+        phone: "", 
+        email: "" 
+      }
+    ]);
+  };
+  
+  const removeAuditorContact = (index: number) => {
+    const currentContacts = form.getValues("auditorContacts") || [];
+    form.setValue(
+      "auditorContacts", 
+      currentContacts.filter((_, i) => i !== index)
+    );
+  };
+  
+  // Contacts management (audités)
+  const addAuditedOrgContact = () => {
+    const currentContacts = form.getValues("auditedOrgContacts") || [];
+    form.setValue("auditedOrgContacts", [
+      ...currentContacts, 
+      { 
+        name: "", 
+        firstName: "", 
+        title: "", 
+        phone: "", 
+        email: "" 
+      }
+    ]);
+  };
+  
+  const removeAuditedOrgContact = (index: number) => {
+    const currentContacts = form.getValues("auditedOrgContacts") || [];
+    form.setValue(
+      "auditedOrgContacts", 
+      currentContacts.filter((_, i) => i !== index)
+    );
+  };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">Avant propos</h2>
-        <Badge 
-          variant={isCompleted ? "default" : "outline"} 
-          className={isCompleted ? "bg-green-100 text-green-800" : ""}
-        >
+        <Badge variant={isCompleted ? "default" : "outline"} className={isCompleted ? "bg-green-100 text-green-800" : ""}>
           {isCompleted ? "Complété" : "Non complété"}
         </Badge>
       </div>
 
-      {/* Confidentialité du document */}
-      <div className="p-4 bg-yellow-50 rounded-md mb-6">
-        <h3 className="text-lg font-semibold mb-3">Confidentialité du document</h3>
-        <div className="space-y-3">
-          <FormField
-            control={form.control}
-            name="confidentialityOptions.noDisclosure"
-            render={({ field }) => (
-              <FormItem className="flex items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    Non divulgation des informations confidentielles auprès de tierces parties
-                  </FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confidentialityOptions.noReproduction"
-            render={({ field }) => (
-              <FormItem className="flex items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    Non reproduction des informations confidentielles sans accord
-                  </FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confidentialityOptions.noPersonalUse"
-            render={({ field }) => (
-              <FormItem className="flex items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    Non utilisation des informations confidentielles à des fins personnelles ou commerciales
-                  </FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confidentialityOptions.noCommercialUse"
-            render={({ field }) => (
-              <FormItem className="flex items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    Non utilisation des informations confidentielles à des fins personnelles ou commerciales
-                  </FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
+      {/* Confidentialité */}
+      <div className="mb-8">
+        <h3 className="text-lg font-medium mb-3">Confidentialité</h3>
+        <Card className="border-gray-200">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="confidentialityOptions.noDisclosure"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Non divulgation</FormLabel>
+                      <FormDescription>
+                        Ce document ne peut être divulgué à des tiers sans autorisation écrite préalable.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confidentialityOptions.noReproduction"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Non reproduction</FormLabel>
+                      <FormDescription>
+                        Ce document ne peut être reproduit en tout ou partie sans autorisation écrite préalable.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confidentialityOptions.noPersonalUse"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Non utilisation personnelle</FormLabel>
+                      <FormDescription>
+                        Le contenu de ce document ne peut être utilisé à des fins personnelles.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confidentialityOptions.noCommercialUse"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Non utilisation commerciale</FormLabel>
+                      <FormDescription>
+                        Le contenu de ce document ne peut être utilisé à des fins commerciales.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Historique des modifications */}
-      <div className="p-4 bg-yellow-50 rounded-md mb-6">
-        <h3 className="text-lg font-semibold mb-3">Historique des modifications</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-yellow-100">
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Version</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Date</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Auteur</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Modifications</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {versionHistory.fields.map((field, index) => (
-                <tr key={field.id}>
-                  <td className="px-4 py-2 text-sm border border-yellow-200">
-                    <FormField
-                      control={form.control}
-                      name={`versionHistory.${index}.version`}
-                      render={({ field }) => (
-                        <FormItem className="m-0">
-                          <FormControl>
-                            <Input
-                              {...field}
-                              className="h-8 px-2"
-                              placeholder="Ex: 1.0"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-sm border border-yellow-200">
-                    <FormField
-                      control={form.control}
-                      name={`versionHistory.${index}.date`}
-                      render={({ field }) => (
-                        <FormItem className="m-0">
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="date"
-                              className="h-8 px-2"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-sm border border-yellow-200">
-                    <FormField
-                      control={form.control}
-                      name={`versionHistory.${index}.author`}
-                      render={({ field }) => (
-                        <FormItem className="m-0">
-                          <FormControl>
-                            <Input
-                              {...field}
-                              className="h-8 px-2"
-                              placeholder="Nom de l'auteur"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-sm border border-yellow-200">
-                    <FormField
-                      control={form.control}
-                      name={`versionHistory.${index}.changes`}
-                      render={({ field }) => (
-                        <FormItem className="m-0">
-                          <FormControl>
-                            <Input
-                              {...field}
-                              className="h-8 px-2"
-                              placeholder="Ex: Création du rapport"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-sm border border-yellow-200">
-                    {versionHistory.fields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => versionHistory.remove(index)}
-                        className="h-8 text-destructive hover:text-destructive/80"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+      {/* Historique des versions */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-lg font-medium">Historique des versions</h3>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={addVersion}
+            className="flex items-center gap-1"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Ajouter une version
+          </Button>
+        </div>
+        
+        <div className="space-y-4">
+          {form.watch("versionHistory")?.map((version: any, index: number) => (
+            <Card key={index} className="border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Version {version.version}</Badge>
+                    <span className="text-sm text-gray-500">{version.date}</span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => removeVersion(index)}
+                    className="h-8 w-8 p-0 text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name={`versionHistory.${index}.version`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Version</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`versionHistory.${index}.date`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`versionHistory.${index}.author`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Auteur</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nom de l'auteur" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`versionHistory.${index}.changes`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Modifications</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Description des modifications" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => 
-            versionHistory.append({ 
-              version: `1.${versionHistory.fields.length}`, 
-              date: new Date().toISOString().split('T')[0], 
-              author: "", 
-              changes: "Ajout du point 1.2" 
-            })
-          }
-          className="mt-4 text-sm"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Ajouter une version
-        </Button>
       </div>
 
-      {/* Diffusion côté Auditeur */}
-      <div className="p-4 bg-yellow-50 rounded-md mb-6">
-        <h3 className="text-lg font-semibold mb-3">Diffusion côté Auditeur</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-yellow-100">
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Nom</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Prénom</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Titre</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Téléphone</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Email</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {auditorContacts.fields.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-2 text-sm text-center border border-yellow-200">
-                    Aucun contact ajouté
-                  </td>
-                </tr>
-              ) : (
-                auditorContacts.fields.map((field, index) => (
-                  <tr key={field.id}>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditorContacts.${index}.name`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="Dupont"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditorContacts.${index}.firstName`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="Jean"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditorContacts.${index}.title`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="Auditeur"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditorContacts.${index}.phone`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="0123456789"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditorContacts.${index}.email`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="email@example.com"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => auditorContacts.remove(index)}
-                        className="h-8 text-destructive hover:text-destructive/80"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Contacts - Auditeurs */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-lg font-medium">Diffusion Côté Auditeur</h3>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={addAuditorContact}
+            className="flex items-center gap-1"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Ajouter un contact
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => 
-            auditorContacts.append({
-              name: "",
-              firstName: "",
-              title: "Auditeur",
-              phone: "",
-              email: "",
-            })
-          }
-          className="mt-4 text-sm"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Ajouter un contact auditeur
-        </Button>
+        
+        <div className="space-y-4">
+          {form.watch("auditorContacts")?.map((contact: any, index: number) => (
+            <Card key={index} className="border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">
+                      {contact.name || contact.firstName ? 
+                        `${contact.firstName || ''} ${contact.name || ''}`.trim() : 
+                        `Contact ${index + 1}`
+                      }
+                    </span>
+                    {contact.title && <Badge variant="outline">{contact.title}</Badge>}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => removeAuditorContact(index)}
+                    className="h-8 w-8 p-0 text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name={`auditorContacts.${index}.firstName`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prénom</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Prénom" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`auditorContacts.${index}.name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nom</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nom" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`auditorContacts.${index}.title`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Titre / Fonction</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Responsable audit" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`auditorContacts.${index}.phone`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Téléphone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Numéro de téléphone" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`auditorContacts.${index}.email`}
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Adresse email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-
-      {/* Diffusion côté Organisme Audité */}
-      <div className="p-4 bg-yellow-50 rounded-md mb-6">
-        <h3 className="text-lg font-semibold mb-3">Diffusion côté Organisme Audité</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-yellow-100">
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Nom</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Prénom</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Titre</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Téléphone</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Email</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold border border-yellow-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {auditedOrgContacts.fields.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-2 text-sm text-center border border-yellow-200">
-                    Aucun contact ajouté
-                  </td>
-                </tr>
-              ) : (
-                auditedOrgContacts.fields.map((field, index) => (
-                  <tr key={field.id}>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditedOrgContacts.${index}.name`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="Omrani"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditedOrgContacts.${index}.firstName`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="Ahmed"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditedOrgContacts.${index}.title`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="Responsable"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditedOrgContacts.${index}.phone`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="0123456789"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <FormField
-                        control={form.control}
-                        name={`auditedOrgContacts.${index}.email`}
-                        render={({ field }) => (
-                          <FormItem className="m-0">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="h-8 px-2"
-                                placeholder="email@example.com"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm border border-yellow-200">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => auditedOrgContacts.remove(index)}
-                        className="h-8 text-destructive hover:text-destructive/80"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      
+      {/* Contacts - Audités */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-lg font-medium">Diffusion Côté Audité</h3>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={addAuditedOrgContact}
+            className="flex items-center gap-1"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Ajouter un contact
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => 
-            auditedOrgContacts.append({
-              name: "",
-              firstName: "",
-              title: "Responsable",
-              phone: "",
-              email: "",
-            })
-          }
-          className="mt-4 text-sm"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Ajouter un contact organisme
-        </Button>
+        
+        <div className="space-y-4">
+          {form.watch("auditedOrgContacts")?.map((contact: any, index: number) => (
+            <Card key={index} className="border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">
+                      {contact.name || contact.firstName ? 
+                        `${contact.firstName || ''} ${contact.name || ''}`.trim() : 
+                        `Contact ${index + 1}`
+                      }
+                    </span>
+                    {contact.title && <Badge variant="outline">{contact.title}</Badge>}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => removeAuditedOrgContact(index)}
+                    className="h-8 w-8 p-0 text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name={`auditedOrgContacts.${index}.firstName`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prénom</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Prénom" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`auditedOrgContacts.${index}.name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nom</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nom" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`auditedOrgContacts.${index}.title`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Titre / Fonction</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Directeur financier" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`auditedOrgContacts.${index}.phone`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Téléphone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Numéro de téléphone" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name={`auditedOrgContacts.${index}.email`}
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Adresse email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );

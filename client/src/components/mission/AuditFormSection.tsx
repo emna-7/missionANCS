@@ -29,7 +29,12 @@ interface AuditFormSectionProps {
 export function AuditFormSection({ section, currentSection, form }: AuditFormSectionProps) {
   const isCompleted = section.isCompleted(form.getValues());
 
-  // Section 0: General Information
+  // Section 0: Avant propos
+  const renderAvantPropos = () => (
+    <AvantProposSection form={form} />
+  );
+
+  // Section 1: General Information
   const renderGeneralInformation = () => (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -796,14 +801,16 @@ export function AuditFormSection({ section, currentSection, form }: AuditFormSec
   // Render the appropriate section based on currentSection
   switch (currentSection) {
     case 0:
-      return renderGeneralInformation();
+      return renderAvantPropos();
     case 1:
-      return renderFinancialAnalysis();
+      return renderGeneralInformation();
     case 2:
-      return renderRiskAssessment();
+      return renderFinancialAnalysis();
     case 3:
-      return renderComplianceGovernance();
+      return renderRiskAssessment();
     case 4:
+      return renderComplianceGovernance();
+    case 5:
       return renderRecommendations();
     default:
       return null;
