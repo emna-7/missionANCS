@@ -53,6 +53,23 @@ export default function MissionList() {
     }
   };
 
+  const handleDeleteAllMissions = async () => {
+    try {
+      await apiRequest("DELETE", "/api/missions/all");
+      queryClient.invalidateQueries({ queryKey: ['/api/missions'] });
+      toast({
+        title: "Toutes les missions supprimées",
+        description: "Toutes les missions ont été supprimées avec succès.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la suppression: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusBadge = (status: string, progress: number) => {
     if (progress === 100) return <Badge className="bg-green-100 text-green-800">Complété</Badge>;
     if (progress > 0) return <Badge className="bg-yellow-100 text-yellow-800">En cours</Badge>;
@@ -184,12 +201,38 @@ export default function MissionList() {
           <h1 className="text-2xl font-bold tracking-tight">Missions d'audit</h1>
           <p className="text-muted-foreground">Gérez vos missions d'audit</p>
         </div>
-        <Button asChild className="mt-4 sm:mt-0">
-          <Link href="/missions/new" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Nouvelle mission
-          </Link>
-        </Button>
+        <div className="flex gap-2 mt-4 sm:mt-0">
+          <Button asChild>
+            <Link href="/missions/new" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nouvelle mission
+            </Link>
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4" />
+                Supprimer toutes
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer toutes les missions</AlertDialogTitle>
+                <AlertDialogDescription>
+                  ⚠️ Cette action supprimera TOUTES les missions et leurs données associées.
+                  Cette action est irréversible. Êtes-vous sûr de vouloir continuer ?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAllMissions} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Supprimer toutes
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
 
       <Card>

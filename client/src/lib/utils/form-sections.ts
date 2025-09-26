@@ -11,6 +11,16 @@ export interface FormSection {
   isCompleted: ValidatorFn;
 }
 
+// Page de couverture validation
+const coverPageCompleted: ValidatorFn = (data) => {
+  // La section est complétée si au moins le titre et le nom de l'entreprise sont remplis
+  return Boolean(
+    data.title &&
+    data.companyName
+    // Retiré companyLogo car il n'est probablement pas défini dans MissionFormData
+  );
+};
+
 // Avant propos section validation
 const avantProposCompleted: ValidatorFn = (data) => {
   // La section est complétée si au moins une option de confidentialité est sélectionnée,
@@ -161,67 +171,96 @@ const recommendationsCompleted: ValidatorFn = (data) => {
   );
 };
 
+// Termes et définitions validation
+const termsDefinitionsCompleted: ValidatorFn = (data) => {
+  // La section est complétée si au moins un terme est défini
+  // Vérifier si la propriété existe avant de vérifier sa longueur
+  return Boolean(
+    data.termsDefinitions && 
+    Array.isArray(data.termsDefinitions) &&
+    data.termsDefinitions.length > 0
+  );
+};
+
+// Références validation
+const referencesCompleted: ValidatorFn = (data) => {
+  // La section est complétée si au moins une référence est définie
+  // Vérifier si la propriété existe avant de vérifier sa longueur
+  return Boolean(
+    data.references && 
+    Array.isArray(data.references) &&
+    data.references.length > 0
+  );
+};
+
 // Form sections definition
 export const formSections: FormSection[] = [
   {
     id: 0,
+    name: "Page de couverture",
+    description: "Page de présentation avec logo et informations principales",
+    isCompleted: coverPageCompleted
+  },
+  {
+    id: 1,
     name: "Avant propos",
     description: "Informations sur la confidentialité et la diffusion du document",
     isCompleted: avantProposCompleted
   },
   {
-    id: 1,
+    id: 2,
     name: "Cadre de la mission",
     description: "Contexte légal et réglementaire, objectifs et limites",
     isCompleted: missionFrameworkCompleted
   },
   {
-    id: 2,
-    name: "Présentation de l'organisme",
+    id: 3,
+    name: "Termes et définitions",
+    description: "Définition des termes techniques utilisés dans le rapport",
+    isCompleted: termsDefinitionsCompleted
+  },
+  {
+    id: 4,
+    name: "Références",
+    description: "Documents et standards de référence utilisés",
+    isCompleted: referencesCompleted
+  },
+  {
+    id: 5,
+    name: "Présentation de l'organisme audité",
     description: "Présentation générale et cartographie des processus",
     isCompleted: orgPresentationCompleted
   },
   {
-    id: 3,
+    id: 6,
     name: "Champ d'audit",
     description: "Périmètre, applications et infrastructure auditée",
     isCompleted: auditScopeCompleted
   },
   {
-    id: 4,
+    id: 7,
     name: "Méthodologie d'audit",
     description: "Référentiels, outils, équipes et planning d'exécution",
     isCompleted: auditMethodologyCompleted
   },
   {
-    id: 5,
-    name: "Informations générales",
+    id: 8,
+    name: "Synthèse des résultats de l'audit",
     description: "Informations de base sur l'entité auditée",
     isCompleted: generalInfoCompleted
   },
   {
-    id: 6,
-    name: "Analyse financière",
-    description: "Analyse des données financières et des ratios",
-    isCompleted: financialAnalysisCompleted
-  },
-  {
-    id: 7,
-    name: "Évaluation des risques",
+    id: 9,
+    name: "Appréciation des risques",
     description: "Identification et évaluation des risques",
     isCompleted: riskAssessmentCompleted
   },
+
   {
-    id: 8,
-    name: "Conformité et gouvernance",
-    description: "Évaluation de la conformité réglementaire et de la structure de gouvernance",
-    isCompleted: complianceCompleted
-  },
-  {
-    id: 9,
-    name: "Recommandations",
-    description: "Plan d'action et recommandations",
-    isCompleted: recommendationsCompleted
+    id: 10,
+    name: "Plan d'action",
+    description: "Organisation par projets des actions et recommandations",
+    isCompleted: () => true // Toujours considéré comme complété pour l'instant
   }
 ];
 
@@ -332,11 +371,9 @@ export const securityDomainOptions = [
 
 // Security measures maturity options
 export const maturityOptions = [
-  { value: "none", label: "Inexistant" },
-  { value: "basic", label: "Basic" },
-  { value: "average", label: "Moyen" },
-  { value: "good", label: "Bon" },
-  { value: "excellent", label: "Excellent" }
+  { value: "high", label: "Élevé", color: "bg-green-100 text-green-800 border-green-200" },
+  { value: "medium", label: "Moyen", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  { value: "low", label: "Faible", color: "bg-red-100 text-red-800 border-red-200" }
 ];
 
 // Audit tool types
@@ -350,13 +387,12 @@ export const auditToolTypes = [
 
 // Audit phases
 export const auditPhases = [
-  { value: "planning", label: "Phase 0: Planification de l'audit" },
-  { value: "preparation", label: "Phase 1: Déclenchement de l'Audit" },
-  { value: "organizational", label: "Phase 1: Audit Organisationnel et Physique" },
-  { value: "identification", label: "Phase 2: Représentation des Risques" },
-  { value: "technical", label: "Phase 3: Audit Technique" },
-  { value: "post_audit", label: "Phase 4: Restitution Post-Audit" },
-  { value: "report", label: "Phase 5: Préparation du Rapport d'Audit" }
+  { value: "phase0", label: "Phase 0 : Déclenchement de l'Audit" },
+  { value: "phase1", label: "Phase 1 : Audit Organisationnel et Physique" },
+  { value: "phase2", label: "Phase 2 : Appréciation des Risques" },
+  { value: "phase3", label: "Phase 3 : Audit Technique" },
+  { value: "phase4", label: "Phase 4 : Sensibilisation Post-Audit" },
+  { value: "phase5", label: "Phase 5 : Préparation du Rapport d'Audit" }
 ];
 
 // Task status options
@@ -367,3 +403,11 @@ export const taskStatusOptions = [
   { value: "completed", label: "Terminé" },
   { value: "canceled", label: "Annulé" }
 ];
+
+
+
+
+
+
+
+

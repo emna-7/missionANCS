@@ -5,16 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formSections } from "@/lib/utils/form-sections";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  PlusCircle, 
-  Trash2, 
+import {
+  PlusCircle,
+  Trash2,
   AlertTriangle,
-  Info, 
-  FileUp, 
-  Settings 
+  Info,
+  FileUp,
+  Settings,
+  Edit
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
@@ -55,8 +56,7 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
         processName: "",
         confidentiality: 1,
         integrity: 1,
-        availability: 1,
-        comments: ""
+        availability: 1
       }
     ]);
   };
@@ -93,11 +93,13 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
     form.setValue("securityRequirements", updatedSecurityReqs);
   };
   
+  // Modifier les fonctions de couleur pour supporter 4 niveaux
   const getConfidentialityColor = (level: number) => {
     switch(level) {
       case 1: return "bg-green-100 text-green-800 border-green-200";
-      case 2: return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 3: return "bg-red-100 text-red-800 border-red-200";
+      case 2: return "bg-blue-100 text-blue-800 border-blue-200";
+      case 3: return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case 4: return "bg-red-100 text-red-800 border-red-200";
       default: return "";
     }
   };
@@ -105,8 +107,9 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
   const getIntegrityColor = (level: number) => {
     switch(level) {
       case 1: return "bg-green-100 text-green-800 border-green-200";
-      case 2: return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 3: return "bg-red-100 text-red-800 border-red-200";
+      case 2: return "bg-blue-100 text-blue-800 border-blue-200";
+      case 3: return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case 4: return "bg-red-100 text-red-800 border-red-200";
       default: return "";
     }
   };
@@ -114,8 +117,24 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
   const getAvailabilityColor = (level: number) => {
     switch(level) {
       case 1: return "bg-green-100 text-green-800 border-green-200";
-      case 2: return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 3: return "bg-red-100 text-red-800 border-red-200";
+      case 2: return "bg-blue-100 text-blue-800 border-blue-200";
+      case 3: return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case 4: return "bg-red-100 text-red-800 border-red-200";
+      default: return "";
+    }
+  };
+  
+  // Ajouter fonction pour calculer la criticité et la classification
+  const getCriticality = (conf: number, integ: number, avail: number) => {
+    return Math.max(conf, integ, avail);
+  };
+
+  const getClassification = (criticality: number) => {
+    switch(criticality) {
+      case 4: return "Critique et Prioritaire";
+      case 3: return "Important mais avec flexibilité";
+      case 2: return "Modéré, nécessite vigilance";
+      case 1: return "Faible, peu impactant";
       default: return "";
     }
   };
@@ -125,19 +144,62 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
     confidentiality: [
       { level: 1, name: "Faible", description: "Information publique, diffusion sans restriction." },
       { level: 2, name: "Moyen", description: "Restreint au personnel interne et partenaires autorisés." },
-      { level: 3, name: "Élevé", description: "Très restreint, accès limité aux personnes expressément autorisées." }
+      { level: 3, name: "Élevé", description: "Très restreint, accès limité aux personnes expressément autorisées." },
+      { level: 4, name: "Critique", description: "Strictement confidentiel, accès extrêmement limité et contrôlé." }
     ],
     integrity: [
       { level: 1, name: "Faible", description: "Modifications mineures acceptables, impact limité." },
       { level: 2, name: "Moyen", description: "Les erreurs tolérables si détectées, données vérifiées par processus." },
-      { level: 3, name: "Élevé", description: "Aucune erreur tolérée, vérification avancée requise." }
+      { level: 3, name: "Élevé", description: "Aucune erreur tolérée, vérification avancée requise." },
+      { level: 4, name: "Critique", description: "Intégrité absolue requise, toute altération pourrait être catastrophique." }
     ],
     availability: [
       { level: 1, name: "Faible", description: "Indisponibilité tolérable, peu d'impact opérationnel." },
       { level: 2, name: "Moyen", description: "Disponible aux heures ouvrées avec interruptions planifiées." },
-      { level: 3, name: "Élevé", description: "Haute disponibilité requise 24/7, temps d'arrêt minimal." }
+      { level: 3, name: "Élevé", description: "Haute disponibilité requise 24/7, temps d'arrêt minimal." },
+      { level: 4, name: "Critique", description: "Disponibilité permanente critique, aucune interruption tolérée." }
     ]
   };
+
+  // Processus métier prédéfinis - affichés comme lignes fixes
+  const predefinedProcesses = [
+    "Gestion des audits",
+    "Gestion des risques",
+    "Gestion des ressources humaines",
+    "Services fiscaux",
+    "Gestion des incidents de sécurité",
+    "Gestion des achats"
+  ];
+
+  // Initialiser automatiquement les processus prédéfinis
+  useEffect(() => {
+    const currentProcesses = form.getValues("businessProcesses") || [];
+    const currentSecurityReqs = form.getValues("securityRequirements") || [];
+
+    // Si aucun processus n'existe, initialiser avec les processus prédéfinis
+    if (currentProcesses.length === 0) {
+      const initialProcesses = predefinedProcesses.map((processName, index) => ({
+        id: index + 1,
+        name: processName,
+        description: "",
+        dataType: ""
+      }));
+
+      const initialSecurityReqs = predefinedProcesses.map((processName, index) => ({
+        processId: index + 1,
+        processName: processName,
+        confidentiality: 1,
+        integrity: 1,
+        availability: 1
+      }));
+
+      form.setValue("businessProcesses", initialProcesses);
+      form.setValue("securityRequirements", initialSecurityReqs);
+    }
+  }, [form, predefinedProcesses]);
+
+  // Dans la fonction OrganizationPresentationSection, ajouter une fonction pour modifier un processus
+  // const [editingProcessId, setEditingProcessId] = useState<number | null>(null);
 
   return (
     <div>
@@ -266,17 +328,11 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
         {/* Cartographie des processus */}
         <TabsContent value="processes">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle>Cartographie des processus de l'organisme</CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={addProcess}
-                className="flex items-center gap-1"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Ajouter un processus
-              </Button>
+              <p className="text-sm text-gray-600 mt-2">
+                Processus métier prédéfinis de l'organisme. Complétez les descriptions et flux de données.
+              </p>
             </CardHeader>
             <CardContent>
               {businessProcesses.length === 0 ? (
@@ -288,10 +344,10 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px]">ID</TableHead>
-                      <TableHead>Processus</TableHead>
+                      <TableHead>Processus métier</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead>Type de données traitées</TableHead>
-                      <TableHead className="w-[100px]">Actions</TableHead>
+                      <TableHead>Flux de données associés</TableHead>
+                      <TableHead className="w-[120px]">Statut</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -299,25 +355,9 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                       <TableRow key={process.id}>
                         <TableCell className="font-medium">{process.id}</TableCell>
                         <TableCell>
-                          <FormField
-                            control={form.control}
-                            name={`businessProcesses.${index}.name`}
-                            render={({ field }) => (
-                              <FormItem className="mb-0">
-                                <FormControl>
-                                  <Input 
-                                    {...field} 
-                                    placeholder="Nom du processus"
-                                    onChange={(e) => {
-                                      field.onChange(e);
-                                      updateProcessNameInSecurityRequirements(process.id, e.target.value);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div className="font-medium text-gray-900 py-2">
+                            {process.name}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <FormField
@@ -340,7 +380,7 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                             render={({ field }) => (
                               <FormItem className="mb-0">
                                 <FormControl>
-                                  <Input {...field} placeholder="Type de données" />
+                                  <Input {...field} placeholder="Flux de données" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -348,14 +388,9 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                           />
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeProcess(process.id)}
-                            className="h-8 w-8 p-0 text-red-500"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="text-center text-gray-400">
+                            <span className="text-xs">Processus fixe</span>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -381,18 +416,19 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Processus</TableHead>
+                      <TableHead>Désignation du processus</TableHead>
                       <TableHead className="w-[120px]">Confidentialité</TableHead>
                       <TableHead className="w-[120px]">Intégrité</TableHead>
                       <TableHead className="w-[120px]">Disponibilité</TableHead>
-                      <TableHead>Commentaires</TableHead>
+                      <TableHead className="w-[120px]">Criticité</TableHead>
+                      <TableHead>Classification</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {securityRequirements.map((req: any, index: number) => {
-                      // Find matching process
-                      const process = businessProcesses.find((p: any) => p.id === req.processId);
-                      if (!process) return null;
+                      const process = businessProcesses.find((p: any) => p.id === req.processId) || {};
+                      const criticality = getCriticality(req.confidentiality, req.integrity, req.availability);
+                      const classification = getClassification(criticality);
                       
                       return (
                         <TableRow key={req.processId}>
@@ -410,7 +446,7 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                                       value={field.value?.toString()}
                                       className="flex flex-col space-y-1"
                                     >
-                                      {[1, 2, 3].map((level) => (
+                                      {[1, 2, 3, 4].map((level) => (
                                         <div 
                                           key={level} 
                                           className={cn(
@@ -444,7 +480,7 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                                       value={field.value?.toString()}
                                       className="flex flex-col space-y-1"
                                     >
-                                      {[1, 2, 3].map((level) => (
+                                      {[1, 2, 3, 4].map((level) => (
                                         <div 
                                           key={level} 
                                           className={cn(
@@ -478,7 +514,7 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                                       value={field.value?.toString()}
                                       className="flex flex-col space-y-1"
                                     >
-                                      {[1, 2, 3].map((level) => (
+                                      {[1, 2, 3, 4].map((level) => (
                                         <div 
                                           key={level} 
                                           className={cn(
@@ -499,23 +535,19 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
                               )}
                             />
                           </TableCell>
+                          <TableCell className="font-medium">
+                            {criticality}
+                          </TableCell>
                           <TableCell>
-                            <FormField
-                              control={form.control}
-                              name={`securityRequirements.${index}.comments`}
-                              render={({ field }) => (
-                                <FormItem className="mb-0">
-                                  <FormControl>
-                                    <Textarea 
-                                      {...field} 
-                                      placeholder="Commentaires additionnels"
-                                      rows={3}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                            <div className={cn(
+                              "px-3 py-2 rounded-md text-sm",
+                              criticality === 4 ? "bg-red-100 text-red-800" :
+                              criticality === 3 ? "bg-yellow-100 text-yellow-800" :
+                              criticality === 2 ? "bg-blue-100 text-blue-800" :
+                              "bg-green-100 text-green-800"
+                            )}>
+                              {classification}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -616,3 +648,11 @@ export function OrganizationPresentationSection({ form }: OrganizationPresentati
     </div>
   );
 }
+
+
+
+
+
+
+
+

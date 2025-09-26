@@ -37,7 +37,7 @@ export function AvantProposSection({ form }: AvantProposSectionProps) {
     const currentVersions = form.getValues("versionHistory") || [];
     form.setValue(
       "versionHistory", 
-      currentVersions.filter((_, i) => i !== index)
+      currentVersions.filter((_: any, i: number) => i !== index)
     );
   };
   
@@ -60,7 +60,7 @@ export function AvantProposSection({ form }: AvantProposSectionProps) {
     const currentContacts = form.getValues("auditorContacts") || [];
     form.setValue(
       "auditorContacts", 
-      currentContacts.filter((_, i) => i !== index)
+      currentContacts.filter((_: any, i: number) => i !== index)
     );
   };
   
@@ -83,7 +83,7 @@ export function AvantProposSection({ form }: AvantProposSectionProps) {
     const currentContacts = form.getValues("auditedOrgContacts") || [];
     form.setValue(
       "auditedOrgContacts", 
-      currentContacts.filter((_, i) => i !== index)
+      currentContacts.filter((_: any, i: number) => i !== index)
     );
   };
 
@@ -98,7 +98,7 @@ export function AvantProposSection({ form }: AvantProposSectionProps) {
 
       {/* Confidentialité */}
       <div className="mb-8">
-        <h3 className="text-lg font-medium mb-3">Confidentialité</h3>
+        <h3 className="text-lg font-medium mb-3">Confidentialité du document</h3>
         <Card className="border-gray-200">
           <CardContent className="pt-6">
             <div className="space-y-4">
@@ -193,7 +193,7 @@ export function AvantProposSection({ form }: AvantProposSectionProps) {
       {/* Historique des versions */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-medium">Historique des versions</h3>
+          <h3 className="text-lg font-medium">Historique des modifications</h3>
           <Button 
             variant="outline" 
             size="sm" 
@@ -521,3 +521,5 @@ export function AvantProposSection({ form }: AvantProposSectionProps) {
     </div>
   );
 }
+
+

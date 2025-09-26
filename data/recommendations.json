@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "missionId": 1,
+    "description": "Implémenter une politique de mots de passe robuste",
+    "priority": "Haute",
+    "responsible": "DSI",
+    "timeline": "Q1 2024",
+    "status": "Planifié",
+    "createdAt": "2024-01-15T00:00:00.000Z",
+    "updatedAt": "2024-01-15T00:00:00.000Z"
+  }
+]

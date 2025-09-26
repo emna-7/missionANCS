@@ -1,10 +1,9 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp, varchar, decimal } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import { sqliteTable, text, integer, real, blob } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 
 // User schema
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   fullName: text("full_name"),
@@ -12,33 +11,34 @@ export const users = pgTable("users", {
   role: text("role").default("user"),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  fullName: true,
-  email: true,
-  role: true,
+// Créer un schéma d'insertion manuellement au lieu d'utiliser createInsertSchema
+export const insertUserSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+  fullName: z.string().optional(),
+  email: z.string().email().optional(),
+  role: z.string().optional().default("user"),
 });
 
 // Contact schema for mission contacts
-export const contacts = pgTable("contacts", {
-  id: serial("id").primaryKey(),
+export const contacts = sqliteTable("contacts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   missionId: integer("mission_id").notNull(),
   name: text("name").notNull(),
   position: text("position"),
   email: text("email"),
 });
 
-export const insertContactSchema = createInsertSchema(contacts).pick({
-  missionId: true,
-  name: true,
-  position: true,
-  email: true,
+export const insertContactSchema = z.object({
+  missionId: z.number(),
+  name: z.string().min(1),
+  position: z.string().optional(),
+  email: z.string().email().optional(),
 });
 
 // Risk schema for mission risks
-export const risks = pgTable("risks", {
-  id: serial("id").primaryKey(),
+export const risks = sqliteTable("risks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   missionId: integer("mission_id").notNull(),
   riskType: text("risk_type").notNull(),
   probability: text("probability").notNull(),
@@ -47,18 +47,18 @@ export const risks = pgTable("risks", {
   mitigation: text("mitigation"),
 });
 
-export const insertRiskSchema = createInsertSchema(risks).pick({
-  missionId: true,
-  riskType: true,
-  probability: true,
-  impact: true,
-  description: true,
-  mitigation: true,
+export const insertRiskSchema = z.object({
+  missionId: z.number(),
+  riskType: z.string().min(1),
+  probability: z.string().min(1),
+  impact: z.string().min(1),
+  description: z.string().optional(),
+  mitigation: z.string().optional(),
 });
 
 // Recommendation schema for mission recommendations
-export const recommendations = pgTable("recommendations", {
-  id: serial("id").primaryKey(),
+export const recommendations = sqliteTable("recommendations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   missionId: integer("mission_id").notNull(),
   description: text("description").notNull(),
   priority: text("priority").notNull(),
@@ -66,17 +66,17 @@ export const recommendations = pgTable("recommendations", {
   deadline: text("deadline"),
 });
 
-export const insertRecommendationSchema = createInsertSchema(recommendations).pick({
-  missionId: true,
-  description: true,
-  priority: true,
-  responsible: true,
-  deadline: true,
+export const insertRecommendationSchema = z.object({
+  missionId: z.number(),
+  description: z.string().min(1),
+  priority: z.string().min(1),
+  responsible: z.string().optional(),
+  deadline: z.string().optional(),
 });
 
 // Main mission schema
-export const missions = pgTable("missions", {
-  id: serial("id").primaryKey(),
+export const missions = sqliteTable("missions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   companyName: text("company_name").notNull(),
   companyType: text("company_type"),
@@ -86,22 +86,22 @@ export const missions = pgTable("missions", {
   activitySector: text("activity_sector"),
   
   // Avant propos - Document confidentiality
-  confidentialityOptions: jsonb("confidentiality_options"),
+  confidentialityOptions: text("confidentiality_options"), // JSON stored as text
   
   // Avant propos - Document version history
-  versionHistory: jsonb("version_history"),
+  versionHistory: text("version_history"), // JSON stored as text
   
   // Avant propos - Auditor contacts and Audited organization contacts
-  auditorContacts: jsonb("auditor_contacts"),
-  auditedOrgContacts: jsonb("audited_org_contacts"),
+  auditorContacts: text("auditor_contacts"), // JSON stored as text
+  auditedOrgContacts: text("audited_org_contacts"), // JSON stored as text
   
   // Cadre de la mission - Informations légales et réglementaires
   legalFrameworkText: text("legal_framework_text"),
   legalFrameworkReference: text("legal_framework_reference"),
   auditType: text("audit_type"),
   missionObjective: text("mission_objective"),
-  isoPrepCertification: boolean("iso_prep_certification"),
-  isoStandards: jsonb("iso_standards"),
+  isoPrepCertification: text("iso_prep_certification"),
+  isoStandards: text("iso_standards"),
   auditLimitations: text("audit_limitations"),
   
   // Présentation de l'organisme audité - Informations générales
@@ -113,16 +113,16 @@ export const missions = pgTable("missions", {
   orgWebsite: text("org_website"),
   
   // Présentation de l'organisme audité - Cartographie des processus
-  businessProcesses: jsonb("business_processes"),
+  businessProcesses: text("business_processes"),
   
   // Présentation de l'organisme audité - Exigences de sécurité
-  securityRequirements: jsonb("security_requirements"),
+  securityRequirements: text("security_requirements"),
   
   // Présentation de l'organisme audité - CIA (Confidentialité, Intégrité, Disponibilité)
-  ciaMatrix: jsonb("cia_matrix"),
+  ciaMatrix: text("cia_matrix"),
   
   // Champ d'audit - Périmètre géographique
-  geographicPerimeter: jsonb("geographic_perimeter"),
+  geographicPerimeter: text("geographic_perimeter"),
   
   // Champ d'audit - Impacts et complexité
   operationsImpact: text("operations_impact"),
@@ -131,50 +131,53 @@ export const missions = pgTable("missions", {
   samplingCriteria: text("sampling_criteria"),
   systemsDescription: text("systems_description"),
   
+  // Champ d'audit - Évaluations pour l'échantillonnage
+  siteSamplingEvaluations: text("site_sampling_evaluations"),
+  
   // Champ d'audit - Applications
-  applications: jsonb("applications"),
+  applications: text("applications"),
   
   // Champ d'audit - Infrastructure réseau et sécurité
-  networkInfrastructure: jsonb("network_infrastructure"),
+  networkInfrastructure: text("network_infrastructure"),
   
   // Champ d'audit - Postes de travail
-  workstations: jsonb("workstations"),
+  workstations: text("workstations"),
   
   // Champ d'audit - Serveurs
-  servers: jsonb("servers"),
+  servers: text("servers"),
   
   // Méthodologie d'audit - Domaines de sécurité
-  securityDomains: jsonb("security_domains"),
+  securityDomains: text("security_domains"),
   
   // Méthodologie d'audit - Maturité des mesures
-  securityMeasuresMaturity: jsonb("security_measures_maturity"),
+  securityMeasuresMaturity: text("security_measures_maturity"),
   
   // Méthodologie d'audit - Outils d'audit
-  auditTools: jsonb("audit_tools"),
+  auditTools: text("audit_tools"),
   
   // Méthodologie d'audit - Checklists
-  auditChecklists: jsonb("audit_checklists"),
+  auditChecklists: text("audit_checklists"),
   
   // Méthodologie d'audit - Équipe d'audit
-  auditTeam: jsonb("audit_team"),
+  auditTeam: text("audit_team"),
   
   // Méthodologie d'audit - Équipe côté organisme
-  organizationTeam: jsonb("organization_team"),
+  organizationTeam: text("organization_team"),
   
   // Méthodologie d'audit - Planning d'exécution
-  missionPlanning: jsonb("mission_planning"),
+  missionPlanning: text("mission_planning"),
   
   // Financial analysis data
-  annualRevenue: decimal("annual_revenue", { precision: 15, scale: 2 }),
-  profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }),
-  totalAssets: decimal("total_assets", { precision: 15, scale: 2 }),
-  totalDebts: decimal("total_debts", { precision: 15, scale: 2 }),
-  financialRatios: jsonb("financial_ratios"),
+  annualRevenue: real("annual_revenue"),
+  profitMargin: real("profit_margin"),
+  totalAssets: real("total_assets"),
+  totalDebts: real("total_debts"),
+  financialRatios: text("financial_ratios"),
   financialComments: text("financial_comments"),
   
   // Compliance and governance
-  complianceStatus: jsonb("compliance_status"),
-  governanceStructure: jsonb("governance_structure"),
+  complianceStatus: text("compliance_status"),
+  governanceStructure: text("governance_structure"),
   
   // Action plan
   observations: text("observations"),
@@ -182,18 +185,117 @@ export const missions = pgTable("missions", {
   followUpResponsible: text("follow_up_responsible"),
   followUpDetails: text("follow_up_details"),
   
+  // Page de couverture
+  auditeeLogo: text("auditee_logo"),
+  auditorLogo: text("auditor_logo"),
+  auditorSignature: text("auditor_signature"),
+  auditorName: text("auditor_name"),
+  documentVersion: text("document_version"),
+  documentDate: text("document_date"),
+  documentDiffusion: text("document_diffusion"),
+
+  // Propriétés pour les termes et définitions
+  termsDefinitions: text("terms_definitions"),
+
+  // Propriétés pour les références
+  refs: text("refs"),
+
   // Status and metadata
   status: text("status").default("draft"),
   progress: integer("progress").default(0),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: integer("created_at").default(0),
+  updatedAt: integer("updated_at").default(0),
   createdBy: integer("created_by"),
 });
 
-export const insertMissionSchema = createInsertSchema(missions).omit({ 
-  id: true,
-  createdAt: true,
-  updatedAt: true 
+// Créer un schéma d'insertion manuellement au lieu d'utiliser createInsertSchema
+export const insertMissionSchema = z.object({
+  title: z.string().optional().default(""),
+  companyName: z.string().optional().default(""),
+  companyType: z.string().optional(),
+  registrationNumber: z.string().optional(),
+  creationDate: z.string().optional(),
+  address: z.string().optional(),
+  activitySector: z.string().optional(),
+  
+  confidentialityOptions: z.any().optional(),
+  versionHistory: z.any().optional(),
+  auditorContacts: z.any().optional(),
+  auditedOrgContacts: z.any().optional(),
+  
+  legalFrameworkText: z.string().optional(),
+  legalFrameworkReference: z.string().optional(),
+  auditType: z.string().optional(),
+  missionObjective: z.string().optional(),
+  isoPrepCertification: z.string().optional(),
+  isoStandards: z.any().optional(),
+  auditLimitations: z.string().optional(),
+  
+  orgName: z.string().optional(),
+  orgLogo: z.string().optional(),
+  orgBusinessActivity: z.string().optional(),
+  orgCreationDate: z.string().optional(),
+  orgContactInfo: z.string().optional(),
+  orgWebsite: z.string().optional(),
+  
+  businessProcesses: z.any().optional(),
+  securityRequirements: z.any().optional(),
+  ciaMatrix: z.any().optional(),
+  geographicPerimeter: z.any().optional(),
+  
+  operationsImpact: z.string().optional(),
+  sensitiveData: z.string().optional(),
+  infrastructureComplexity: z.string().optional(),
+  samplingCriteria: z.string().optional(),
+  systemsDescription: z.string().optional(),
+  siteSamplingEvaluations: z.any().optional(),
+  
+  applications: z.any().optional(),
+  networkInfrastructure: z.any().optional(),
+  workstations: z.any().optional(),
+  servers: z.any().optional(),
+  
+  securityDomains: z.any().optional(),
+  securityMeasuresMaturity: z.any().optional(),
+  auditTools: z.any().optional(),
+  auditChecklists: z.any().optional(),
+  auditTeam: z.any().optional(),
+  organizationTeam: z.any().optional(),
+  missionPlanning: z.any().optional(),
+  
+  annualRevenue: z.number().optional(),
+  profitMargin: z.number().optional(),
+  totalAssets: z.number().optional(),
+  totalDebts: z.number().optional(),
+  financialRatios: z.any().optional(),
+  financialComments: z.string().optional(),
+  
+  complianceStatus: z.any().optional(),
+  governanceStructure: z.any().optional(),
+  
+  observations: z.string().optional(),
+  followUpDate: z.string().optional(),
+  followUpResponsible: z.string().optional(),
+  followUpDetails: z.string().optional(),
+
+  // Page de couverture
+  auditeeLogo: z.string().optional(),
+  auditorLogo: z.string().optional(),
+  auditorSignature: z.string().optional(),
+  auditorName: z.string().optional(),
+  documentVersion: z.string().optional(),
+  documentDate: z.string().optional(),
+  documentDiffusion: z.string().optional(),
+
+  // Termes et définitions
+  termsDefinitions: z.any().optional(),
+
+  // Références
+  refs: z.any().optional(),
+
+  status: z.string().optional().default("draft"),
+  progress: z.number().optional().default(0),
+  createdBy: z.number().optional(),
 });
 
 // Define types
@@ -220,7 +322,12 @@ export const missionFormSchema = insertMissionSchema.extend({
     noReproduction: z.boolean().default(false),
     noPersonalUse: z.boolean().default(false),
     noCommercialUse: z.boolean().default(false),
-  }).optional(),
+  }).optional().default({
+    noDisclosure: false,
+    noReproduction: false,
+    noPersonalUse: false,
+    noCommercialUse: false,
+  }),
   
   // Avant propos - Version history
   versionHistory: z.array(
@@ -292,10 +399,9 @@ export const missionFormSchema = insertMissionSchema.extend({
     z.object({
       processId: z.number(),
       processName: z.string(),
-      confidentiality: z.number().min(1).max(3),
-      integrity: z.number().min(1).max(3),
-      availability: z.number().min(1).max(3),
-      comments: z.string().optional(),
+      confidentiality: z.number().min(1).max(4),
+      integrity: z.number().min(1).max(4),
+      availability: z.number().min(1).max(4)
     })
   ).optional().default([]),
   
@@ -310,7 +416,8 @@ export const missionFormSchema = insertMissionSchema.extend({
     ).optional().default([
       { level: 1, name: "Faible", description: "Information publique, diffusion sans restriction." },
       { level: 2, name: "Moyen", description: "Restreint au personnel interne et partenaires autorisés." },
-      { level: 3, name: "Élevé", description: "Très restreint, accès limité aux personnes expressément autorisées." }
+      { level: 3, name: "Élevé", description: "Très restreint, accès limité aux personnes expressément autorisées." },
+      { level: 4, name: "Critique", description: "Strictement confidentiel, accès extrêmement limité et contrôlé." }
     ]),
     integrity: z.array(
       z.object({
@@ -321,7 +428,8 @@ export const missionFormSchema = insertMissionSchema.extend({
     ).optional().default([
       { level: 1, name: "Faible", description: "Modifications mineures acceptables, impact limité." },
       { level: 2, name: "Moyen", description: "Les erreurs tolérables si détectées, données vérifiées par processus." },
-      { level: 3, name: "Élevé", description: "Aucune erreur tolérée, vérification avancée requise." }
+      { level: 3, name: "Élevé", description: "Aucune erreur tolérée, vérification avancée requise." },
+      { level: 4, name: "Critique", description: "Intégrité absolue requise, toute altération pourrait être catastrophique." }
     ]),
     availability: z.array(
       z.object({
@@ -332,7 +440,8 @@ export const missionFormSchema = insertMissionSchema.extend({
     ).optional().default([
       { level: 1, name: "Faible", description: "Indisponibilité tolérable, peu d'impact opérationnel." },
       { level: 2, name: "Moyen", description: "Disponible aux heures ouvrées avec interruptions planifiées." },
-      { level: 3, name: "Élevé", description: "Haute disponibilité requise 24/7, temps d'arrêt minimal." }
+      { level: 3, name: "Élevé", description: "Haute disponibilité requise 24/7, temps d'arrêt minimal." },
+      { level: 4, name: "Critique", description: "Disponibilité permanente critique, aucune interruption tolérée." }
     ])
   }).optional().default({}),
   
@@ -433,9 +542,9 @@ export const missionFormSchema = insertMissionSchema.extend({
       id: z.number(),
       toolName: z.string(),
       version: z.string(),
-      purpose: z.string(),
-      mainResponsible: z.string(),
-      usageComments: z.string()
+      license: z.string(),
+      features: z.string(),
+      components: z.string()
     })
   ).optional().default([]),
   
@@ -447,7 +556,7 @@ export const missionFormSchema = insertMissionSchema.extend({
       version: z.string(),
       source: z.string(),
       description: z.string(),
-      lastUpdate: z.string()
+      components: z.string()
     })
   ).optional().default([]),
   
@@ -455,11 +564,12 @@ export const missionFormSchema = insertMissionSchema.extend({
   auditTeam: z.array(
     z.object({
       id: z.number(),
-      name: z.string(),
+      lastName: z.string(),
+      firstName: z.string(),
       role: z.string(),
       qualification: z.string(),
       certifiedBy: z.string(),
-      observationsPro: z.string()
+      interventionFields: z.string()
     })
   ).optional().default([]),
   
@@ -467,7 +577,8 @@ export const missionFormSchema = insertMissionSchema.extend({
   organizationTeam: z.array(
     z.object({
       id: z.number(),
-      name: z.string(),
+      lastName: z.string(),
+      firstName: z.string(),
       position: z.string(),
       function: z.string()
     })
@@ -482,37 +593,94 @@ export const missionFormSchema = insertMissionSchema.extend({
       startDate: z.string(),
       endDate: z.string(),
       period: z.number(),
-      status: z.string(),
-      manDays: z.number(),
-      peopleInvolved: z.number()
+      onSite: z.string(),
+      manDays: z.number()
     })
   ).optional().default([]),
 
-  // Original fields
+  // Contacts
   contacts: z.array(
     z.object({
-      name: z.string().min(1, "Le nom est requis"),
-      position: z.string().optional(),
+      name: z.string(),
+      position: z.string(),
       email: z.string().email("Email invalide").optional().or(z.literal("")),
     })
-  ).optional(),
+  ).optional().default([]),
+  
+  // Risques
   risks: z.array(
     z.object({
-      riskType: z.string().min(1, "Le type de risque est requis"),
-      probability: z.string().min(1, "La probabilité est requise"),
-      impact: z.string().min(1, "L'impact est requis"),
-      description: z.string().optional(),
-      mitigation: z.string().optional(),
+      riskType: z.string(),
+      probability: z.string(),
+      impact: z.string(),
+      description: z.string(),
+      mitigation: z.string(),
     })
-  ).optional(),
+  ).optional().default([]),
+  
+  // Recommandations
   recommendations: z.array(
     z.object({
-      description: z.string().min(1, "La description est requise"),
-      priority: z.string().min(1, "La priorité est requise"),
-      responsible: z.string().optional(),
-      deadline: z.string().optional(),
+      description: z.string(),
+      priority: z.string(),
+      responsible: z.string(),
+      deadline: z.string(),
     })
-  ).optional(),
+  ).optional().default([]),
+
+  // Propriétés pour la page de couverture
+  companyLogo: z.string().optional(),
+
+  // Informations du document - avec valeur par défaut
+  documentDiffusion: z.string().optional().default("Document Confidentiel"),
+
+  // Propriétés pour les termes et définitions
+  termsDefinitions: z.array(
+    z.object({
+      id: z.number(),
+      term: z.string(),
+      definition: z.string()
+    })
+  ).optional().default([]),
+
+  // Propriétés pour les références
+  references: z.array(
+    z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      author: z.string().optional(),
+      year: z.string().optional(),
+      description: z.string().optional(),
+      url: z.string().optional(),
+      fileUrl: z.string().optional()
+    })
+  ).default([]),
+  // Évaluations pour l'échantillonnage
+  siteSamplingEvaluations: z.array(
+    z.object({
+      siteId: z.number(),
+      operationsScore: z.number().min(1).max(3),
+      sensitiveDataScore: z.number().min(1).max(3),
+      complexityScore: z.number().min(1).max(3)
+    })
+  ).optional().default([]),
 });
 
 export type MissionFormData = z.infer<typeof missionFormSchema>;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Tabs, 
   TabsContent, 
@@ -8,14 +8,13 @@ import {
 import {
   FormControl,
   FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+  FormItem
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { 
   Select, 
   SelectContent, 
@@ -23,22 +22,80 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Plus, Trash2, Calendar } from "lucide-react";
+import { 
+  Plus, 
+  Trash2, 
+  Shield, 
+  BarChart3, 
+  Wrench, 
+  ClipboardCheck, 
+  Users, 
+  Building, 
+  Calendar 
+} from "lucide-react";
 import { 
   securityDomainOptions, 
-  maturityOptions, 
-  auditToolTypes,
-  auditPhases,
-  taskStatusOptions
+  maturityOptions 
 } from "@/lib/utils/form-sections";
 import { MissionFormData } from "@shared/schema";
+import { UseFormReturn } from "react-hook-form";
 
 interface AuditMethodologySectionProps {
-  form: any;
+  form: UseFormReturn<MissionFormData>;
 }
 
 export function AuditMethodologySection({ form }: AuditMethodologySectionProps) {
   const [activeTab, setActiveTab] = useState("security-domains");
+
+  // État pour stocker les résultats de maturité calculés depuis l'autre section
+  const [calculatedMaturityResults, setCalculatedMaturityResults] = useState<Array<{
+    domain: string;
+    average: string;
+    percentage: string;
+    category: string;
+    controlsCount: number;
+    evaluatedCount: number;
+  }>>([]);
+
+  // Écouter l'événement de calcul de maturité depuis AuditResultsSection
+  useEffect(() => {
+    const handleMaturityCalculated = (event: CustomEvent) => {
+      const results = event.detail;
+      setCalculatedMaturityResults(results);
+
+      // Remplacer automatiquement les données du formulaire avec les résultats calculés
+      const newSecurityMeasuresMaturity = results.map((result: any, index: number) => ({
+        id: index + 1,
+        domainName: result.domain,
+        maturityLevel: result.category,
+        comments: `Moyenne: ${result.average}/5 (${result.percentage}%) - ${result.evaluatedCount}/${result.controlsCount} contrôles évalués`
+      }));
+
+      form.setValue("securityMeasuresMaturity", newSecurityMeasuresMaturity);
+
+      // Basculer automatiquement vers l'onglet maturité
+      setActiveTab("maturity");
+    };
+
+    // Vérifier s'il y a des données sauvegardées dans localStorage au chargement
+    const savedResults = localStorage.getItem('domainMaturityResults');
+    if (savedResults) {
+      try {
+        const results = JSON.parse(savedResults);
+        handleMaturityCalculated({ detail: results } as CustomEvent);
+        // Nettoyer localStorage après utilisation
+        localStorage.removeItem('domainMaturityResults');
+      } catch (error) {
+        console.error('Erreur lors du chargement des résultats de maturité:', error);
+      }
+    }
+
+    window.addEventListener('maturityCalculated', handleMaturityCalculated as EventListener);
+
+    return () => {
+      window.removeEventListener('maturityCalculated', handleMaturityCalculated as EventListener);
+    };
+  }, [form]);
 
   // Security Domains
   const securityDomains = form.watch("securityDomains") || [];
@@ -103,9 +160,9 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         id: newId,
         toolName: "",
         version: "",
-        purpose: "",
-        mainResponsible: "",
-        usageComments: ""
+        license: "",
+        features: "",
+        components: ""
       }
     ]);
   };
@@ -132,7 +189,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         version: "",
         source: "",
         description: "",
-        lastUpdate: ""
+        components: ""
       }
     ]);
   };
@@ -150,20 +207,21 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
     const newId = auditTeam.length > 0 
       ? Math.max(...auditTeam.map((m: any) => m.id)) + 1 
       : 1;
-    
+  
     form.setValue("auditTeam", [
       ...auditTeam,
       {
         id: newId,
-        name: "",
+        lastName: "",
+        firstName: "",
         role: "",
         qualification: "",
-        certifiedBy: "",
-        observationsPro: ""
+        certifiedBy: "Non",
+        interventionFields: ""
       }
     ]);
   };
-  
+
   const removeAuditTeamMember = (id: number) => {
     form.setValue(
       "auditTeam",
@@ -182,13 +240,14 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
       ...organizationTeam,
       {
         id: newId,
-        name: "",
+        lastName: "",
+        firstName: "",
         position: "",
         function: ""
       }
     ]);
   };
-  
+
   const removeOrganizationTeamMember = (id: number) => {
     form.setValue(
       "organizationTeam",
@@ -211,19 +270,30 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         taskDescription: "",
         startDate: "",
         endDate: "",
-        period: 1,
-        status: "not_started",
-        manDays: 1,
-        peopleInvolved: 1
+        period: 0,
+        onSite: "yes",
+        manDays: 1
       }
     ]);
   };
-  
+
   const removeMissionPlanningTask = (id: number) => {
     form.setValue(
       "missionPlanning",
       missionPlanning.filter((task: any) => task.id !== id)
     );
+  };
+
+  // Fonction pour calculer la période entre deux dates
+  const updatePeriod = (index: number, startDate: string, endDate: string) => {
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 pour inclure le jour de début
+      
+      form.setValue(`missionPlanning.${index}.period`, diffDays);
+    }
   };
 
   return (
@@ -235,19 +305,67 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         </Badge>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 mb-6">
-          <TabsTrigger value="security-domains">Domaines de sécurité</TabsTrigger>
-          <TabsTrigger value="maturity">Maturité des mesures</TabsTrigger>
-          <TabsTrigger value="tools">Outils d'audit</TabsTrigger>
-          <TabsTrigger value="checklists">Checklists</TabsTrigger>
-          <TabsTrigger value="audit-team">Équipe d'audit</TabsTrigger>
-          <TabsTrigger value="organization-team">Équipe côté organisme</TabsTrigger>
-          <TabsTrigger value="planning">Planning d'exécution</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="mb-6 border-b">
+          <TabsList className="h-auto p-0 bg-transparent w-full">
+            <div className="flex w-full overflow-x-auto pb-2">
+              <div className="flex min-w-max w-full">
+                <TabsTrigger 
+                  value="security-domains" 
+                  className="flex items-center gap-2 px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent"
+                >
+                  <Shield className="h-5 w-5" />
+                  <span className="whitespace-nowrap">Domaines de sécurité</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="maturity" 
+                  className="flex items-center gap-2 px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent"
+                >
+                  <BarChart3 className="h-5 w-5" />
+                  <span className="whitespace-nowrap">Maturité des mesures</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tools" 
+                  className="flex items-center gap-2 px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent"
+                >
+                  <Wrench className="h-5 w-5" />
+                  <span className="whitespace-nowrap">Outils d'audit</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="checklists" 
+                  className="flex items-center gap-2 px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent"
+                >
+                  <ClipboardCheck className="h-5 w-5" />
+                  <span className="whitespace-nowrap">Checklists</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="audit-team" 
+                  className="flex items-center gap-2 px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent"
+                >
+                  <Users className="h-5 w-5" />
+                  <span className="whitespace-nowrap">Équipe d'audit</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="organization-team" 
+                  className="flex items-center gap-2 px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent"
+                >
+                  <Building className="h-5 w-5" />
+                  <span className="whitespace-nowrap">Équipe organisme</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="planning" 
+                  className="flex items-center gap-2 px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent"
+                >
+                  <Calendar className="h-5 w-5" />
+                  <span className="whitespace-nowrap">Planning</span>
+                </TabsTrigger>
+              </div>
+            </div>
+          </TabsList>
+        </div>
 
         {/* Domaines de sécurité */}
-        <TabsContent value="security-domains" className="space-y-4">
+        <TabsContent value="security-domains" className="space-y-4 min-w-[800px]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Domaines de sécurité audités</h3>
             <Button type="button" onClick={addSecurityDomain} variant="outline" size="sm">
@@ -265,7 +383,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                 <thead>
                   <tr className="bg-secondary-50">
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Domaine de sécurité</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Référentiel d'audit (ISO25)</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Référentiel d'audit (ANCS)</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Actions auditées</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Actions</th>
                   </tr>
@@ -305,7 +423,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: ISO 27001 / Section 8" {...field} />
+                                <Input placeholder="Ex: ANCS / Section 8" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -343,13 +461,29 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         </TabsContent>
 
         {/* Maturité des mesures */}
-        <TabsContent value="maturity" className="space-y-4">
+        <TabsContent value="maturity" className="space-y-4 min-w-[800px]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Maturité des Mesures de Sécurité</h3>
             <Button type="button" onClick={addSecurityMeasureMaturity} variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" /> Ajouter une évaluation
             </Button>
           </div>
+
+          {/* Notification si les données ont été générées automatiquement */}
+          {calculatedMaturityResults.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="flex items-center">
+                <BarChart3 className="h-5 w-5 text-blue-600 mr-2" />
+                <div>
+                  <h4 className="font-semibold text-blue-800">Données générées automatiquement</h4>
+                  <p className="text-sm text-blue-700">
+                    Ce tableau a été généré à partir des évaluations de maturité de l'onglet "Maturité SI".
+                    Les moyennes par domaine ont été calculées automatiquement.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {securityMeasuresMaturity.length === 0 ? (
             <div className="text-center p-4 border rounded-md border-dashed">
@@ -367,83 +501,95 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                   </tr>
                 </thead>
                 <tbody>
-                  {securityMeasuresMaturity.map((measure: any, index: number) => (
-                    <tr key={measure.id}>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
-                        <FormField
-                          control={form.control}
-                          name={`securityMeasuresMaturity.${index}.domainName`}
-                          render={({ field }) => (
-                            <FormItem className="m-0">
-                              <Select 
-                                onValueChange={field.onChange} 
-                                value={field.value || ""}
-                              >
+                  {securityMeasuresMaturity.map((measure: any, index: number) => {
+                    // Trouver l'option de maturité correspondante pour obtenir la couleur
+                    const maturityOption = maturityOptions.find(option => option.value === measure.maturityLevel);
+                    const rowColorClass = maturityOption?.color || "";
+                    
+                    return (
+                      <tr key={measure.id} className={rowColorClass}>
+                        <td className="px-4 py-2 text-sm border border-secondary-200">
+                          <FormField
+                            control={form.control}
+                            name={`securityMeasuresMaturity.${index}.domainName`}
+                            render={({ field }) => (
+                              <FormItem className="m-0">
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  value={field.value || ""}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Sélectionnez un domaine" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {securityDomainOptions.map((option) => (
+                                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-sm border border-secondary-200">
+                          <FormField
+                            control={form.control}
+                            name={`securityMeasuresMaturity.${index}.maturityLevel`}
+                            render={({ field }) => (
+                              <FormItem className="m-0">
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  value={field.value || ""}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Niveau de maturité" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {maturityOptions.map((option) => (
+                                      <SelectItem 
+                                        key={option.value} 
+                                        value={option.value}
+                                        className={field.value === option.value ? option.color : ""}
+                                      >
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-sm border border-secondary-200">
+                          <FormField
+                            control={form.control}
+                            name={`securityMeasuresMaturity.${index}.comments`}
+                            render={({ field }) => (
+                              <FormItem className="m-0">
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Sélectionnez un domaine" />
-                                  </SelectTrigger>
+                                  <Textarea placeholder="Détails sur la maturité..." {...field} rows={2} />
                                 </FormControl>
-                                <SelectContent>
-                                  {securityDomainOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>{option}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormItem>
-                          )}
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
-                        <FormField
-                          control={form.control}
-                          name={`securityMeasuresMaturity.${index}.maturityLevel`}
-                          render={({ field }) => (
-                            <FormItem className="m-0">
-                              <Select 
-                                onValueChange={field.onChange} 
-                                value={field.value || ""}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Niveau de maturité" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {maturityOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormItem>
-                          )}
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
-                        <FormField
-                          control={form.control}
-                          name={`securityMeasuresMaturity.${index}.comments`}
-                          render={({ field }) => (
-                            <FormItem className="m-0">
-                              <FormControl>
-                                <Textarea placeholder="Détails sur la maturité..." {...field} rows={2} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeSecurityMeasureMaturity(measure.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-sm border border-secondary-200">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSecurityMeasureMaturity(measure.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -451,14 +597,14 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         </TabsContent>
 
         {/* Outils d'audit */}
-        <TabsContent value="tools" className="space-y-4">
+        <TabsContent value="tools" className="space-y-4 min-w-[800px]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Les outils d'audit utilisés</h3>
             <Button type="button" onClick={addAuditTool} variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" /> Ajouter un outil
             </Button>
           </div>
-
+          
           {auditTools.length === 0 ? (
             <div className="text-center p-4 border rounded-md border-dashed">
               Aucun outil d'audit défini. Ajoutez-en un en cliquant sur le bouton ci-dessus.
@@ -468,11 +614,11 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-secondary-50">
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nom d'outil</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Version utilisée</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Objectif</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Responsable principal</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Commentaires sur l'utilisation</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nom de l'outil</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Version</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Licence</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Fonctionnalités</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Composants testés</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Actions</th>
                   </tr>
                 </thead>
@@ -486,7 +632,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: NMAP" {...field} />
+                                <Input placeholder="Nom de l'outil" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -499,7 +645,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: 7.9.1" {...field} />
+                                <Input placeholder="Version" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -508,11 +654,11 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditTools.${index}.purpose`}
+                          name={`auditTools.${index}.license`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Scanner réseau" {...field} />
+                                <Input placeholder="Type de licence" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -521,11 +667,11 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditTools.${index}.mainResponsible`}
+                          name={`auditTools.${index}.features`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Jean Dupont" {...field} />
+                                <Textarea placeholder="Fonctionnalités principales..." {...field} rows={2} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -534,11 +680,11 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditTools.${index}.usageComments`}
+                          name={`auditTools.${index}.components`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Textarea placeholder="Commentaires..." {...field} rows={2} />
+                                <Textarea placeholder="Composants testés..." {...field} rows={2} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -563,14 +709,14 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         </TabsContent>
 
         {/* Checklists */}
-        <TabsContent value="checklists" className="space-y-4">
+        <TabsContent value="checklists" className="space-y-4 min-w-[800px]">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Les checklists utilisées</h3>
+            <h3 className="text-lg font-semibold">Checklists d'audit</h3>
             <Button type="button" onClick={addAuditChecklist} variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" /> Ajouter une checklist
             </Button>
           </div>
-
+          
           {auditChecklists.length === 0 ? (
             <div className="text-center p-4 border rounded-md border-dashed">
               Aucune checklist définie. Ajoutez-en une en cliquant sur le bouton ci-dessus.
@@ -580,11 +726,11 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-secondary-50">
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nom</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nom de la checklist</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Version</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Source</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Description</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Dernière mise à jour</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Composants testés</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Actions</th>
                   </tr>
                 </thead>
@@ -598,7 +744,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Checklist sécurité réseau" {...field} />
+                                <Input placeholder="Nom de la checklist" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -611,7 +757,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: 1.0" {...field} />
+                                <Input placeholder="Version" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -624,7 +770,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: NIST" {...field} />
+                                <Input placeholder="Source (ex: ANCS)" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -637,7 +783,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Textarea placeholder="Description..." {...field} rows={2} />
+                                <Textarea placeholder="Description de la checklist..." {...field} rows={2} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -646,11 +792,11 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditChecklists.${index}.lastUpdate`}
+                          name={`auditChecklists.${index}.components`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input type="date" {...field} />
+                                <Textarea placeholder="Composants testés..." {...field} rows={2} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -675,14 +821,14 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         </TabsContent>
 
         {/* Équipe d'audit */}
-        <TabsContent value="audit-team" className="space-y-4">
+        <TabsContent value="audit-team" className="space-y-4 min-w-[800px]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Équipe d'audit</h3>
             <Button type="button" onClick={addAuditTeamMember} variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" /> Ajouter un membre
             </Button>
           </div>
-
+          
           {auditTeam.length === 0 ? (
             <div className="text-center p-4 border rounded-md border-dashed">
               Aucun membre d'équipe défini. Ajoutez-en un en cliquant sur le bouton ci-dessus.
@@ -692,11 +838,12 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-secondary-50">
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nom et Prénom</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Rôle/Fonction</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Qualification (ISO 27001)</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Certifié par / CISA</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Observations</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nom</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Prénom</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Rôle</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Qualification</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Certifié par l'ANCS</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Domaines d'intervention</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Actions</th>
                   </tr>
                 </thead>
@@ -706,11 +853,24 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditTeam.${index}.name`}
+                          name={`auditTeam.${index}.lastName`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Jean Dupont" {...field} />
+                                <Input placeholder="Nom" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                        <FormField
+                          control={form.control}
+                          name={`auditTeam.${index}.firstName`}
+                          render={({ field }) => (
+                            <FormItem className="m-0">
+                              <FormControl>
+                                <Input placeholder="Prénom" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -723,7 +883,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Chef d'équipe" {...field} />
+                                <Input placeholder="Rôle dans l'audit" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -736,7 +896,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Auditeur certifié ISO 27001" {...field} />
+                                <Input placeholder="Qualification" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -747,10 +907,14 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           control={form.control}
                           name={`auditTeam.${index}.certifiedBy`}
                           render={({ field }) => (
-                            <FormItem className="m-0">
+                            <FormItem className="m-0 flex items-center justify-center space-x-2">
                               <FormControl>
-                                <Input placeholder="Ex: ISACA" {...field} />
+                                <Switch
+                                  checked={field.value === "ANCS"}
+                                  onCheckedChange={(checked: boolean) => field.onChange(checked ? "ANCS" : "Non")}
+                                />
                               </FormControl>
+                              <div className="ml-2 text-xs">{field.value === "ANCS" ? "Oui" : "Non"}</div>
                             </FormItem>
                           )}
                         />
@@ -758,11 +922,11 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`auditTeam.${index}.observationsPro`}
+                          name={`auditTeam.${index}.interventionFields`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Textarea placeholder="Observations..." {...field} rows={2} />
+                                <Textarea placeholder="Domaines d'intervention..." {...field} rows={2} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -787,14 +951,14 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
         </TabsContent>
 
         {/* Équipe côté organisme */}
-        <TabsContent value="organization-team" className="space-y-4">
+        <TabsContent value="organization-team" className="space-y-4 min-w-[800px]">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Équipe du côté de l'organisme audité</h3>
+            <h3 className="text-lg font-semibold">Équipe côté organisme</h3>
             <Button type="button" onClick={addOrganizationTeamMember} variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" /> Ajouter un membre
             </Button>
           </div>
-
+          
           {organizationTeam.length === 0 ? (
             <div className="text-center p-4 border rounded-md border-dashed">
               Aucun membre d'équipe défini. Ajoutez-en un en cliquant sur le bouton ci-dessus.
@@ -804,8 +968,9 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-secondary-50">
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nom Prénom</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Poste/Grade</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nom</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Prénom</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Poste</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Fonction</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Actions</th>
                   </tr>
@@ -816,11 +981,24 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                       <td className="px-4 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`organizationTeam.${index}.name`}
+                          name={`organizationTeam.${index}.lastName`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Pierre Martin" {...field} />
+                                <Input placeholder="Nom" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                        <FormField
+                          control={form.control}
+                          name={`organizationTeam.${index}.firstName`}
+                          render={({ field }) => (
+                            <FormItem className="m-0">
+                              <FormControl>
+                                <Input placeholder="Prénom" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -833,7 +1011,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Chef de projet" {...field} />
+                                <Input placeholder="Poste" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -846,7 +1024,7 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Ex: Responsable sécurité" {...field} />
+                                <Input placeholder="Fonction" {...field} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -884,25 +1062,24 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
               Aucune tâche définie. Ajoutez-en une en cliquant sur le bouton ci-dessus.
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto border rounded-md">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-secondary-50">
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Phase</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Tâche de la phase</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Date de début</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Date de fin</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Période</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Statut</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">J/H</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Nb intervenants</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200">Actions</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200 whitespace-nowrap">Phase</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200 whitespace-nowrap">Sous-phase</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200 whitespace-nowrap">Date début</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200 whitespace-nowrap">Date fin</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200 whitespace-nowrap">Période</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200 whitespace-nowrap">Sur site</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200 whitespace-nowrap">H/J</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-secondary-700 border border-secondary-200 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {missionPlanning.map((task: any, index: number) => (
                     <tr key={task.id}>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                      <td className="px-3 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
                           name={`missionPlanning.${index}.phase`}
@@ -913,124 +1090,142 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
                                 value={field.value || ""}
                               >
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Phase" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {auditPhases.map((phase) => (
-                                    <SelectItem key={phase.value} value={phase.value}>{phase.label}</SelectItem>
-                                  ))}
+                                  <SelectItem value="phase0">Phase 0 : Déclenchement</SelectItem>
+                                  <SelectItem value="phase1">Phase 1 : Audit Organisationnel</SelectItem>
+                                  <SelectItem value="phase2">Phase 2 : Appréciation Risques</SelectItem>
+                                  <SelectItem value="phase3">Phase 3 : Audit Technique</SelectItem>
+                                  <SelectItem value="phase4">Phase 4 : Sensibilisation</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormItem>
                           )}
                         />
                       </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                      <td className="px-3 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
                           name={`missionPlanning.${index}.taskDescription`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input placeholder="Description de la tâche" {...field} />
+                                <Input placeholder="Description" {...field} className="w-[180px]" />
                               </FormControl>
                             </FormItem>
                           )}
                         />
                       </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                      <td className="px-3 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
                           name={`missionPlanning.${index}.startDate`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input type="date" {...field} />
+                                <Input 
+                                  type="date" 
+                                  {...field} 
+                                  className="w-[140px]"
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    updatePeriod(index, e.target.value, form.getValues(`missionPlanning.${index}.endDate`));
+                                  }}
+                                />
                               </FormControl>
                             </FormItem>
                           )}
                         />
                       </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                      <td className="px-3 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
                           name={`missionPlanning.${index}.endDate`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input type="date" {...field} />
+                                <Input 
+                                  type="date" 
+                                  {...field} 
+                                  className="w-[140px]"
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    updatePeriod(index, form.getValues(`missionPlanning.${index}.startDate`), e.target.value);
+                                  }}
+                                />
                               </FormControl>
                             </FormItem>
                           )}
                         />
                       </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                      <td className="px-3 py-2 text-sm border border-secondary-200 text-center">
                         <FormField
                           control={form.control}
                           name={`missionPlanning.${index}.period`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input type="number" min="1" {...field} />
+                                <Input 
+                                  type="number" 
+                                  {...field} 
+                                  className="w-[60px] text-center"
+                                  readOnly
+                                />
                               </FormControl>
                             </FormItem>
                           )}
                         />
                       </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                      <td className="px-3 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
-                          name={`missionPlanning.${index}.status`}
+                          name={`missionPlanning.${index}.onSite`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <Select 
                                 onValueChange={field.onChange} 
-                                value={field.value || ""}
+                                value={field.value || "yes"}
                               >
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Statut" />
+                                  <SelectTrigger className="w-[100px]">
+                                    <SelectValue placeholder="Sur site" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {taskStatusOptions.map((status) => (
-                                    <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                                  ))}
+                                  <SelectItem value="yes">Oui</SelectItem>
+                                  <SelectItem value="no">Non</SelectItem>
+                                  <SelectItem value="partial">Partiel</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormItem>
                           )}
                         />
                       </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                      <td className="px-3 py-2 text-sm border border-secondary-200">
                         <FormField
                           control={form.control}
                           name={`missionPlanning.${index}.manDays`}
                           render={({ field }) => (
                             <FormItem className="m-0">
                               <FormControl>
-                                <Input type="number" min="1" {...field} />
+                                <Input 
+                                  type="number" 
+                                  {...field} 
+                                  className="w-[60px]"
+                                  value={field.value || ''}
+                                  onChange={event => field.onChange(
+                                    event.target.value === '' ? '' : Number(event.target.value)
+                                  )}
+                                />
                               </FormControl>
                             </FormItem>
                           )}
                         />
                       </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
-                        <FormField
-                          control={form.control}
-                          name={`missionPlanning.${index}.peopleInvolved`}
-                          render={({ field }) => (
-                            <FormItem className="m-0">
-                              <FormControl>
-                                <Input type="number" min="1" {...field} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-sm border border-secondary-200">
+                      <td className="px-3 py-2 text-sm border border-secondary-200">
                         <Button
                           type="button"
                           variant="ghost"
@@ -1046,8 +1241,29 @@ export function AuditMethodologySection({ form }: AuditMethodologySectionProps) 
               </table>
             </div>
           )}
+          
+          {missionPlanning.length > 0 && (
+            <div className="flex justify-end mt-4">
+              <div className="bg-secondary-50 px-4 py-2 border border-secondary-200 rounded-md">
+                <span className="font-semibold">Durée Totale: </span>
+                <span>{missionPlanning.reduce((total: number, task: any) => total + (Number(task.manDays) || 0), 0)} jours/homme</span>
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

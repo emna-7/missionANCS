@@ -61,6 +61,25 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Couleurs personnalisées pour le thème EY
+        "ey-yellow": {
+          DEFAULT: "hsl(var(--ey-yellow))",
+          light: "hsl(var(--ey-yellow-light))",
+          dark: "hsl(var(--ey-yellow-dark))",
+        },
+        // Nuances de gris EY
+        "ey-gray": {
+          50: "hsl(var(--ey-gray-50))",
+          100: "hsl(var(--ey-gray-100))",
+          200: "hsl(var(--ey-gray-200))",
+          300: "hsl(var(--ey-gray-300))",
+          400: "hsl(var(--ey-gray-400))",
+          500: "hsl(var(--ey-gray-500))",
+          600: "hsl(var(--ey-gray-600))",
+          700: "hsl(var(--ey-gray-700))",
+          800: "hsl(var(--ey-gray-800))",
+          900: "hsl(var(--ey-gray-900))",
+        },
       },
       keyframes: {
         "accordion-down": {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, FileText, Download, ChevronDown, Loader2 } from "lucide-react";
+import { FileSpreadsheet, FileText, Download, ChevronDown, Loader2, Zap } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ export function ExportMenu({ missionId }: ExportMenuProps) {
   const { toast } = useToast();
   const [generatingType, setGeneratingType] = useState<string | null>(null);
 
-  const handleExport = async (format: "excel" | "pdf" | "word") => {
+  const handleExport = async (format: "excel" | "excel-advanced" | "pdf" | "word") => {
     try {
       setGeneratingType(format);
       
@@ -33,6 +33,12 @@ export function ExportMenu({ missionId }: ExportMenuProps) {
           fileType = "xlsx";
           contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
           fileName = `Mission_Audit_${missionId}.xlsx`;
+          break;
+        case "excel-advanced":
+          endpoint = `/api/missions/${missionId}/export/excel-advanced`;
+          fileType = "xlsx";
+          contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+          fileName = `Audit_Complet_${missionId}.xlsx`;
           break;
         case "pdf":
           endpoint = `/api/missions/${missionId}/export/pdf`;
@@ -101,32 +107,56 @@ export function ExportMenu({ missionId }: ExportMenuProps) {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem 
-          onClick={() => handleExport("excel")} 
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuItem
+          onClick={() => handleExport("excel")}
           disabled={Boolean(generatingType)}
         >
           <div className="flex items-center">
             <FileSpreadsheet className="h-5 w-5 mr-2 text-green-600" />
-            Exporter vers Excel
+            <div className="flex flex-col">
+              <span>Excel Simple</span>
+              <span className="text-xs text-gray-500">Export basique</span>
+            </div>
           </div>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => handleExport("pdf")} 
+        <DropdownMenuItem
+          onClick={() => handleExport("excel-advanced")}
+          disabled={Boolean(generatingType)}
+        >
+          <div className="flex items-center">
+            <div className="relative">
+              <FileSpreadsheet className="h-5 w-5 mr-2 text-green-600" />
+              <Zap className="h-3 w-3 absolute -top-1 -right-1 text-yellow-500" />
+            </div>
+            <div className="flex flex-col">
+              <span>Excel Complet</span>
+              <span className="text-xs text-gray-500">Toutes sections + macros VBA</span>
+            </div>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleExport("pdf")}
           disabled={Boolean(generatingType)}
         >
           <div className="flex items-center">
             <FileText className="h-5 w-5 mr-2 text-red-600" />
-            Générer un PDF
+            <div className="flex flex-col">
+              <span>PDF</span>
+              <span className="text-xs text-gray-500">Rapport imprimable</span>
+            </div>
           </div>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => handleExport("word")} 
+        <DropdownMenuItem
+          onClick={() => handleExport("word")}
           disabled={Boolean(generatingType)}
         >
           <div className="flex items-center">
             <FileText className="h-5 w-5 mr-2 text-blue-600" />
-            Générer un Word
+            <div className="flex flex-col">
+              <span>Word</span>
+              <span className="text-xs text-gray-500">Document éditable</span>
+            </div>
           </div>
         </DropdownMenuItem>
       </DropdownMenuContent>

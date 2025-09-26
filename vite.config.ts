@@ -16,6 +16,11 @@ export default defineConfig({
         ]
       : []),
   ],
+  server: {
+    hmr: {
+      overlay: false // Désactiver l'overlay d'erreur HMR
+    }
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -29,3 +34,5 @@ export default defineConfig({
     emptyOutDir: true,
   },
 });
+
+

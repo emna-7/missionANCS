@@ -1,0 +1,112 @@
+CREATE TABLE `contacts` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`mission_id` integer NOT NULL,
+	`name` text NOT NULL,
+	`position` text,
+	`email` text
+);
+--> statement-breakpoint
+CREATE TABLE `missions` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`title` text NOT NULL,
+	`company_name` text NOT NULL,
+	`company_type` text,
+	`registration_number` text,
+	`creation_date` text,
+	`address` text,
+	`activity_sector` text,
+	`confidentiality_options` text,
+	`version_history` text,
+	`auditor_contacts` text,
+	`audited_org_contacts` text,
+	`legal_framework_text` text,
+	`legal_framework_reference` text,
+	`audit_type` text,
+	`mission_objective` text,
+	`iso_prep_certification` text,
+	`iso_standards` text,
+	`audit_limitations` text,
+	`org_name` text,
+	`org_logo` text,
+	`org_business_activity` text,
+	`org_creation_date` text,
+	`org_contact_info` text,
+	`org_website` text,
+	`business_processes` text,
+	`security_requirements` text,
+	`cia_matrix` text,
+	`geographic_perimeter` text,
+	`operations_impact` text,
+	`sensitive_data` text,
+	`infrastructure_complexity` text,
+	`sampling_criteria` text,
+	`systems_description` text,
+	`site_sampling_evaluations` text,
+	`applications` text,
+	`network_infrastructure` text,
+	`workstations` text,
+	`servers` text,
+	`security_domains` text,
+	`security_measures_maturity` text,
+	`audit_tools` text,
+	`audit_checklists` text,
+	`audit_team` text,
+	`organization_team` text,
+	`mission_planning` text,
+	`annual_revenue` real,
+	`profit_margin` real,
+	`total_assets` real,
+	`total_debts` real,
+	`financial_ratios` text,
+	`financial_comments` text,
+	`compliance_status` text,
+	`governance_structure` text,
+	`observations` text,
+	`follow_up_date` text,
+	`follow_up_responsible` text,
+	`follow_up_details` text,
+	`auditee_logo` text,
+	`auditor_logo` text,
+	`auditor_signature` text,
+	`auditor_name` text,
+	`document_version` text,
+	`document_date` text,
+	`document_diffusion` text,
+	`terms_definitions` text,
+	`references` text,
+	`status` text DEFAULT 'draft',
+	`progress` integer DEFAULT 0,
+	`created_at` integer DEFAULT 0,
+	`updated_at` integer DEFAULT 0,
+	`created_by` integer
+);
+--> statement-breakpoint
+CREATE TABLE `recommendations` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`mission_id` integer NOT NULL,
+	`description` text NOT NULL,
+	`priority` text NOT NULL,
+	`responsible` text,
+	`deadline` text
+);
+--> statement-breakpoint
+CREATE TABLE `risks` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`mission_id` integer NOT NULL,
+	`risk_type` text NOT NULL,
+	`probability` text NOT NULL,
+	`impact` text NOT NULL,
+	`description` text,
+	`mitigation` text
+);
+--> statement-breakpoint
+CREATE TABLE `users` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`username` text NOT NULL,
+	`password` text NOT NULL,
+	`full_name` text,
+	`email` text,
+	`role` text DEFAULT 'user'
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `users_username_unique` ON `users` (`username`);

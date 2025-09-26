@@ -22,12 +22,13 @@ export function FormNavigation({
           <ul className="space-y-1">
             {sections.map((section, index) => (
               <li key={index}>
-                <button 
-                  onClick={() => onSectionClick(index)} 
+                <button
+                  type="button"
+                  onClick={() => onSectionClick(index)}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm font-medium rounded-md flex items-center justify-between transition-all",
-                    currentSection === index 
-                      ? "bg-primary-100 text-primary-700 border-l-4 border-primary-500" 
+                    currentSection === index
+                      ? "bg-primary-100 text-primary-700 border-l-4 border-primary-500"
                       : "text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900"
                   )}
                 >

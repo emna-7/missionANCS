@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "missionId": 1,
+    "name": "Accès non autorisé",
+    "description": "Risque d'accès non autorisé aux systèmes critiques",
+    "impact": 4,
+    "probability": 3,
+    "mitigation": "Mise en place d'une authentification forte",
+    "createdAt": "2024-01-15T00:00:00.000Z",
+    "updatedAt": "2024-01-15T00:00:00.000Z"
+  }
+]

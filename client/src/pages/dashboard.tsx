@@ -6,14 +6,14 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowRight, FileSpreadsheet, FileText, PieChart, Plus } from "lucide-react";
 import { Mission } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
+import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart as RPieChart, Pie, Cell
 } from "recharts";
 
 export default function Dashboard() {
-  const { data: missions, isLoading, error } = useQuery<Mission[]>({ 
-    queryKey: ['/api/missions'] 
+  const { data: missions, isLoading, error } = useQuery<Mission[]>({
+    queryKey: ['/api/missions']
   });
   
   const recentMissions = missions?.slice(0, 5) || [];
@@ -38,7 +38,8 @@ export default function Dashboard() {
     { name: 'Non commencées', value: totalMissions - (completedMissions + inProgressMissions) },
   ];
   
-  const COLORS = ['#0088FE', '#FFBB28', '#FF8042'];
+  // Couleurs du thème EY
+  const COLORS = ['hsl(48, 100%, 50%)', 'hsl(0, 0%, 55%)', 'hsl(0, 0%, 70%)'];
   
   if (error) {
     return (
@@ -60,7 +61,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold tracking-tight">Tableau de bord</h1>
           <p className="text-muted-foreground">Vue d'ensemble de vos missions d'audit</p>
         </div>
-        <Button asChild className="mt-4 md:mt-0">
+        <Button asChild className="mt-4 md:mt-0 bg-ey-yellow hover:bg-ey-yellow-dark text-ey-gray-900">
           <Link href="/missions/new" className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Nouvelle mission
@@ -138,7 +139,7 @@ export default function Dashboard() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="progress" stroke="#0ea5e9" activeDot={{ r: 8 }} name="Progression (%)" />
+                  <Line type="monotone" dataKey="progress" stroke="hsl(48, 100%, 50%)" activeDot={{ r: 8 }} name="Progression (%)" />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -221,7 +222,7 @@ export default function Dashboard() {
           )}
         </CardContent>
         <CardFooter>
-          <Button asChild variant="outline" className="w-full">
+          <Button asChild variant="outline" className="w-full border-ey-yellow text-ey-yellow hover:bg-ey-yellow hover:text-ey-gray-900">
             <Link href="/missions">
               Voir toutes les missions
             </Link>

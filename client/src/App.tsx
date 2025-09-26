@@ -9,7 +9,8 @@ import Dashboard from "@/pages/dashboard";
 import MissionForm from "@/pages/mission-form";
 import MissionList from "@/pages/mission-list";
 import Reports from "@/pages/reports";
-import Settings from "@/pages/settings";
+
+import AssistantIA from "@/pages/assistant-ia";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 
 function Router() {
@@ -19,8 +20,9 @@ function Router() {
       <Route path="/missions" component={MissionList} />
       <Route path="/missions/new" component={() => <MissionForm />} />
       <Route path="/missions/:id" component={({ params }) => <MissionForm id={params.id} />} />
+      <Route path="/assistant-ia" component={AssistantIA} />
       <Route path="/reports" component={Reports} />
-      <Route path="/settings" component={Settings} />
+
       <Route component={NotFound} />
     </Switch>
   );
